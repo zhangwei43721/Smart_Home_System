@@ -1,6 +1,7 @@
 #include "obj/Include/screen_dashboard.h"
 #include "obj/http/weather.h"
 #include "obj/Include/screen_ac.h"
+#include "obj/Include/config.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -152,7 +153,7 @@ void screen_dashboard_build(void) {
 
   {
     sh_weather_now_t wn; char werr[128];
-    if (sh_weather_fetch_now("guangzhou", "SirtAO6oBdxoM34w9", &wn, werr, sizeof(werr)) == 0) {
+    if (sh_weather_fetch_now(WEATHER_CITY, WEATHER_API_KEY, &wn, werr, sizeof(werr)) == 0) {
       const lv_img_dsc_t *ic = sh_weather_icon(wn.code);
       if (ic) lv_img_set_src(w_icon, ic);
       char buf[128];
@@ -165,8 +166,8 @@ void screen_dashboard_build(void) {
   WeatherUpdater *wu = (WeatherUpdater *)malloc(sizeof(WeatherUpdater));
   if (wu) {
     wu->icon = w_icon; wu->label = w_city;
-    snprintf(wu->location, sizeof(wu->location), "%s", "guangzhou");
-    snprintf(wu->key, sizeof(wu->key), "%s", "SirtAO6oBdxoM34w9");
+    snprintf(wu->location, sizeof(wu->location), "%s", WEATHER_CITY);
+    snprintf(wu->key, sizeof(wu->key), "%s", WEATHER_API_KEY);
     pthread_t th; pthread_create(&th, NULL, weather_thread, wu); pthread_detach(th);
   }
 

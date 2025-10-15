@@ -1,4 +1,5 @@
 #include "obj/Include/screen_security.h"
+#include "obj/Include/screens_common.h"
 
 typedef enum {
   SEC_DISARMED = 0,
@@ -25,6 +26,75 @@ static void sec_update_buttons(void) {
 static void on_disarm(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_DISARMED; sec_update_buttons(); }
 static void on_arm_away(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_AWAY; sec_update_buttons(); }
 static void on_arm_home(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_HOME; sec_update_buttons(); }
+
+// ========== 详情弹窗 ==========
+typedef struct { int sensor_index; lv_obj_t *mask; } SecDlgCtx;
+
+static void sec_detail_close(lv_event_t *e) {
+  SecDlgCtx *ctx = (SecDlgCtx *)lv_event_get_user_data(e);
+  if (ctx && ctx->mask) {
+    lv_obj_del(ctx->mask); // 删除蒙层将级联删除子对象
+    ctx->mask = NULL;
+  }
+  if (ctx) lv_mem_free(ctx);
+}
+
+static void on_detail_clicked(lv_event_t *e) {
+  intptr_t idx = (intptr_t)lv_event_get_user_data(e);
+  // 蒙层
+  lv_obj_t *mask = lv_obj_create(lv_scr_act());
+  lv_obj_remove_style_all(mask);
+  lv_obj_set_size(mask, LV_PCT(100), LV_PCT(100));
+  lv_obj_set_style_bg_color(mask, lv_color_black(), 0);
+  lv_obj_set_style_bg_opa(mask, LV_OPA_50, 0);
+
+  static const char *names[] = {"门磁","红外","烟雾","水浸","窗磁","震动"};
+
+  // 弹窗
+  lv_obj_t *dlg = lv_obj_create(mask);
+  lv_obj_remove_style_all(dlg);
+  lv_obj_set_size(dlg, 420, 300);
+  lv_obj_center(dlg);
+  lv_obj_set_style_bg_color(dlg, lv_color_white(), 0);
+  lv_obj_set_style_radius(dlg, 12, 0);
+  lv_obj_set_style_pad_all(dlg, 12, 0);
+  lv_obj_set_flex_flow(dlg, LV_FLEX_FLOW_COLUMN);
+  lv_obj_set_flex_align(dlg, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+  lv_obj_set_style_pad_row(dlg, 6, 0);
+
+  // 标题
+  lv_obj_t *title = lv_label_create(dlg);
+  lv_obj_add_style(title, sh_style_text_zh(), 0);
+  lv_label_set_text_fmt(title, "%s · 最近事件", names[idx % 6]);
+  lv_obj_set_style_text_color(title, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
+
+  // 列表（示例数据，后续接入真实日志）
+  for (int i = 0; i < 8; ++i) {
+    lv_obj_t *row = lv_label_create(dlg);
+    lv_obj_add_style(row, sh_style_text_zh(), 0);
+    lv_obj_set_style_text_color(row, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
+    // 交替显示 正常/告警 作为占位
+    const char *state = (i % 3 == 1) ? "告警" : "正常";
+    lv_label_set_text_fmt(row, "#666666 2025-10-15 20:%02d#  %s", 50 - i, state);
+    lv_label_set_recolor(row, true);
+  }
+
+  // 关闭按钮（放在白色弹窗内，保证对比度）
+  lv_obj_t *btn = lv_btn_create(dlg);
+  lv_obj_set_size(btn, 88, 36);
+  lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, 0);
+  lv_obj_add_style(btn, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(btn, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  SecDlgCtx *ctx = (SecDlgCtx *)lv_mem_alloc(sizeof(SecDlgCtx));
+  if (ctx) { ctx->sensor_index = (int)idx; ctx->mask = mask; }
+  lv_obj_add_event_cb(btn, sec_detail_close, LV_EVENT_CLICKED, ctx);
+  lv_obj_add_event_cb(mask, sec_detail_close, LV_EVENT_CLICKED, ctx);
+  lv_obj_t *lbl = lv_label_create(btn);
+  lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+  lv_label_set_text(lbl, "关闭");
+  lv_obj_set_style_text_color(lbl, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
+  lv_obj_center(lbl);
+}
 
 void screen_security_build(void) {
   sh_init_styles_once();
@@ -106,6 +176,7 @@ void screen_security_build(void) {
     lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, -8, -8);
     lv_obj_add_style(btn, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(btn, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_add_event_cb(btn, on_detail_clicked, LV_EVENT_CLICKED, (void*)(intptr_t)i);
     lv_obj_t * lbl = lv_label_create(btn);
     lv_label_set_text(lbl, "详情");
     if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl, sh_get_font_zh(), 0);
