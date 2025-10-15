@@ -1,5 +1,6 @@
 #include "obj/Include/screen_dashboard.h"
 #include "obj/http/weather.h"
+#include "obj/Include/screen_ac.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,6 +12,12 @@ extern const lv_img_dsc_t thermometer;
 extern const lv_img_dsc_t home;
 extern const lv_img_dsc_t door;
 extern const lv_img_dsc_t film;
+
+// 外部导航函数（在 screens_home.c 提供）
+extern void demo_lighting(void);
+extern void demo_security(void);
+extern void demo_energy(void);
+extern void demo_dashboard(void);
 
 typedef struct {
   lv_obj_t *icon;
@@ -77,6 +84,30 @@ static void ac_inc_event_cb(lv_event_t * e) {
   LV_UNUSED(e);
   if (s_ac_temp < 30) s_ac_temp++;
   ac_update_labels(s_ac_ctx.title, s_ac_ctx.temp);
+}
+
+// 点击整卡：跳转到空调详情页
+static void on_card_climate_clicked(lv_event_t * e) {
+  LV_UNUSED(e);
+  screen_ac_show();
+}
+
+// 点击整卡：跳转到能耗页
+static void on_card_energy_clicked(lv_event_t * e) {
+  LV_UNUSED(e);
+  demo_energy();
+}
+
+// 点击整卡：跳转到照明页
+static void on_card_lighting_clicked(lv_event_t * e) {
+  LV_UNUSED(e);
+  demo_lighting();
+}
+
+// 点击整卡：跳转到安防页
+static void on_card_security_clicked(lv_event_t * e) {
+  LV_UNUSED(e);
+  demo_security();
 }
 
 void screen_dashboard_build(void) {
@@ -154,6 +185,9 @@ void screen_dashboard_build(void) {
   lv_obj_add_style(lbl_e, sh_style_text_zh(), 0);
   lv_obj_set_style_text_color(lbl_e, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align_to(lbl_e, e_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+  // 预留：整卡点击可跳转能耗页
+  lv_obj_add_flag(card_energy, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(card_energy, on_card_energy_clicked, LV_EVENT_CLICKED, NULL);
 
   // 次行：空调温控卡（半宽）
   lv_obj_t * card_climate = lv_obj_create(list);
@@ -207,6 +241,9 @@ void screen_dashboard_build(void) {
 
   // 初始同步
   ac_update_labels(lbl_c, temp);
+  // 整卡点击：进入空调详情页
+  lv_obj_add_flag(card_climate, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(card_climate, on_card_climate_clicked, LV_EVENT_CLICKED, NULL);
 
   // 快捷场景（半宽卡，与空调并排）
   lv_obj_t * card_scene = lv_obj_create(list);
@@ -261,16 +298,12 @@ void screen_dashboard_build(void) {
     lv_label_set_text(title, titles[i]);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 6);
 
-    // 右下角按钮：进入
-    lv_obj_t * btn = lv_btn_create(card);
-    lv_obj_set_size(btn, 120, 36);
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, -8, -8);
-    lv_obj_add_style(btn, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(btn, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_t * lbl = lv_label_create(btn);
-    lv_label_set_text(lbl, "进入");
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl, sh_get_font_zh(), 0);
-    lv_obj_set_style_text_color(lbl, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
-    lv_obj_center(lbl);
+    // 整卡可点击导航
+    lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
+    if (i == 0) {
+      lv_obj_add_event_cb(card, on_card_lighting_clicked, LV_EVENT_CLICKED, NULL);
+    } else if (i == 1) {
+      lv_obj_add_event_cb(card, on_card_security_clicked, LV_EVENT_CLICKED, NULL);
+    }
   }
 }

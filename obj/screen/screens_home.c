@@ -169,3 +169,13 @@ void demo_dashboard(void) {
 void demo_lighting(void) {
   on_nav_to_lighting(NULL);
 }
+
+// 对外导出：加载安防屏
+void demo_security(void) {
+  on_nav_to_security(NULL);
+}
+
+// 对外导出：加载能耗屏
+void demo_energy(void) {
+  on_nav_to_energy(NULL);
+}

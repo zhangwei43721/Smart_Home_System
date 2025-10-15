@@ -1,5 +1,31 @@
 #include "obj/Include/screen_security.h"
 
+typedef enum {
+  SEC_DISARMED = 0,
+  SEC_ARMED_AWAY,
+  SEC_ARMED_HOME
+} sec_state_t;
+
+static sec_state_t g_sec_state = SEC_DISARMED;
+
+static lv_obj_t * g_btn_disarm = NULL;
+static lv_obj_t * g_btn_arm_away = NULL;
+static lv_obj_t * g_btn_arm_home = NULL;
+
+static void sec_update_buttons(void) {
+  if (!g_btn_disarm || !g_btn_arm_away || !g_btn_arm_home) return;
+  lv_obj_clear_state(g_btn_disarm, LV_STATE_CHECKED);
+  lv_obj_clear_state(g_btn_arm_away, LV_STATE_CHECKED);
+  lv_obj_clear_state(g_btn_arm_home, LV_STATE_CHECKED);
+  if (g_sec_state == SEC_DISARMED) lv_obj_add_state(g_btn_disarm, LV_STATE_CHECKED);
+  else if (g_sec_state == SEC_ARMED_AWAY) lv_obj_add_state(g_btn_arm_away, LV_STATE_CHECKED);
+  else lv_obj_add_state(g_btn_arm_home, LV_STATE_CHECKED);
+}
+
+static void on_disarm(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_DISARMED; sec_update_buttons(); }
+static void on_arm_away(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_AWAY; sec_update_buttons(); }
+static void on_arm_home(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_HOME; sec_update_buttons(); }
+
 void screen_security_build(void) {
   sh_init_styles_once();
 
@@ -12,13 +38,53 @@ void screen_security_build(void) {
   lv_obj_set_style_pad_all(cont, 12, 0);
   lv_obj_set_style_bg_color(cont, lv_palette_lighten(LV_PALETTE_GREY, 4), 0);
   lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
-  lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+  lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_style_pad_row(cont, 12, 0);
   lv_obj_set_style_pad_column(cont, 12, 0);
 
+  // 顶部：安防整体控制按钮行
+  lv_obj_t * row_ctrl = lv_obj_create(cont);
+  lv_obj_remove_style_all(row_ctrl);
+  lv_obj_set_size(row_ctrl, 800 - 24, 50);
+  lv_obj_set_flex_flow(row_ctrl, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(row_ctrl, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_column(row_ctrl, 12, 0);
+
+  g_btn_disarm = lv_btn_create(row_ctrl);
+  lv_obj_set_size(g_btn_disarm, 120, 40);
+  lv_obj_add_style(g_btn_disarm, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(g_btn_disarm, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  lv_obj_add_event_cb(g_btn_disarm, on_disarm, LV_EVENT_CLICKED, NULL);
+  lv_obj_t * lbl0 = lv_label_create(g_btn_disarm); lv_label_set_text(lbl0, "撤防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl0, sh_get_font_zh(), 0); lv_obj_center(lbl0);
+
+  g_btn_arm_away = lv_btn_create(row_ctrl);
+  lv_obj_set_size(g_btn_arm_away, 120, 40);
+  lv_obj_add_style(g_btn_arm_away, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(g_btn_arm_away, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  lv_obj_add_event_cb(g_btn_arm_away, on_arm_away, LV_EVENT_CLICKED, NULL);
+  lv_obj_t * lbl1 = lv_label_create(g_btn_arm_away); lv_label_set_text(lbl1, "一键布防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl1, sh_get_font_zh(), 0); lv_obj_center(lbl1);
+
+  g_btn_arm_home = lv_btn_create(row_ctrl);
+  lv_obj_set_size(g_btn_arm_home, 120, 40);
+  lv_obj_add_style(g_btn_arm_home, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(g_btn_arm_home, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  lv_obj_add_event_cb(g_btn_arm_home, on_arm_home, LV_EVENT_CLICKED, NULL);
+  lv_obj_t * lbl2 = lv_label_create(g_btn_arm_home); lv_label_set_text(lbl2, "在家布防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl2, sh_get_font_zh(), 0); lv_obj_center(lbl2);
+
+  sec_update_buttons();
+
+  // 传感器卡片网格
+  lv_obj_t * grid = lv_obj_create(cont);
+  lv_obj_remove_style_all(grid);
+  lv_obj_set_size(grid, 800 - 24, (480 - 48 - 56 - 24) - 50 - 12);
+  lv_obj_set_style_bg_opa(grid, LV_OPA_TRANSP, 0);
+  lv_obj_set_flex_flow(grid, LV_FLEX_FLOW_ROW_WRAP);
+  lv_obj_set_style_pad_row(grid, 12, 0);
+  lv_obj_set_style_pad_column(grid, 12, 0);
+
   const char * items[] = {"门磁", "红外", "烟雾", "水浸", "窗磁", "震动"};
   for (int i = 0; i < 6; ++i) {
-    lv_obj_t * card = lv_obj_create(cont);
+    lv_obj_t * card = lv_obj_create(grid);
     lv_obj_add_style(card, sh_style_card(), 0);
     lv_obj_set_size(card, (800 - 24 - 12) / 2, (480 - 48 - 56 - 12*3) / 2);
 
