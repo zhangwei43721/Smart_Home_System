@@ -90,7 +90,7 @@ static void ac_inc_event_cb(lv_event_t * e) {
 // 点击整卡：跳转到空调详情页
 static void on_card_climate_clicked(lv_event_t * e) {
   LV_UNUSED(e);
-  screen_ac_show();
+  screen_ac_build();
 }
 
 // 点击整卡：跳转到能耗页

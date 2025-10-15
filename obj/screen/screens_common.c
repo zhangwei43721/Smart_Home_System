@@ -17,23 +17,42 @@ static lv_style_t g_style_card;
 static lv_style_t g_style_nav_text;
 static lv_style_t g_style_card_info;
 static lv_style_t g_style_text_zh;
+static lv_style_t g_style_text_zh_large;
+static lv_style_t g_style_text_zh_small;
 static lv_style_t g_style_btn_neutral;
 static lv_style_t g_style_btn_neutral_pressed;
 static bool g_styles_inited_common = false;
 
 static lv_font_t * g_font_zh_common = NULL;
+static lv_font_t * g_font_zh_large = NULL;
+static lv_font_t * g_font_zh_small = NULL;
 static lv_obj_t * g_time_label = NULL;
 static lv_timer_t * g_time_timer = NULL;
 
 static void ensure_font_loaded(void) {
-  if (g_font_zh_common) return;
-  static lv_ft_info_t info;
-  info.name = "./MiSans.ttf";
-  info.weight = 24;
-  info.style = FT_FONT_STYLE_NORMAL;
-  info.mem = NULL;
-  if (lv_ft_font_init(&info)) {
-    g_font_zh_common = info.font;
+  if (!g_font_zh_common) {
+    static lv_ft_info_t info24;
+    info24.name = "./MiSans.ttf";
+    info24.weight = 24;
+    info24.style = FT_FONT_STYLE_NORMAL;
+    info24.mem = NULL;
+    if (lv_ft_font_init(&info24)) g_font_zh_common = info24.font;
+  }
+  if (!g_font_zh_large) {
+    static lv_ft_info_t info48;
+    info48.name = "./MiSans.ttf";
+    info48.weight = 48;
+    info48.style = FT_FONT_STYLE_NORMAL;
+    info48.mem = NULL;
+    if (lv_ft_font_init(&info48)) g_font_zh_large = info48.font;
+  }
+  if (!g_font_zh_small) {
+    static lv_ft_info_t info18;
+    info18.name = "./MiSans.ttf";
+    info18.weight = 18;
+    info18.style = FT_FONT_STYLE_NORMAL;
+    info18.mem = NULL;
+    if (lv_ft_font_init(&info18)) g_font_zh_small = info18.font;
   }
 }
 
@@ -71,6 +90,16 @@ void sh_init_styles_once(void) {
   lv_style_set_text_font(&g_style_text_zh, g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT);
   lv_style_set_text_align(&g_style_text_zh, LV_TEXT_ALIGN_CENTER);
 
+  // 中文大号文字样式
+  lv_style_init(&g_style_text_zh_large);
+  lv_style_set_text_font(&g_style_text_zh_large, g_font_zh_large ? g_font_zh_large : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
+  lv_style_set_text_align(&g_style_text_zh_large, LV_TEXT_ALIGN_CENTER);
+
+  // 中文小号文字样式
+  lv_style_init(&g_style_text_zh_small);
+  lv_style_set_text_font(&g_style_text_zh_small, g_font_zh_small ? g_font_zh_small : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
+  lv_style_set_text_align(&g_style_text_zh_small, LV_TEXT_ALIGN_CENTER);
+
   lv_style_init(&g_style_btn_neutral);
   lv_style_set_radius(&g_style_btn_neutral, 10);
   lv_style_set_bg_color(&g_style_btn_neutral, lv_color_white());
@@ -87,12 +116,16 @@ void sh_init_styles_once(void) {
 }
 
 lv_font_t * sh_get_font_zh(void) { return g_font_zh_common; }
+lv_font_t * sh_get_font_zh_large(void) { return g_font_zh_large ? g_font_zh_large : (g_font_zh_common ? g_font_zh_common : (lv_font_t*)LV_FONT_DEFAULT); }
+lv_font_t * sh_get_font_zh_small(void) { return g_font_zh_small ? g_font_zh_small : (g_font_zh_common ? g_font_zh_common : (lv_font_t*)LV_FONT_DEFAULT); }
 
 lv_style_t * sh_style_title(void) { return &g_style_title; }
 lv_style_t * sh_style_card(void) { return &g_style_card; }
 lv_style_t * sh_style_card_info(void) { return &g_style_card_info; }
 lv_style_t * sh_style_nav_text(void) { return &g_style_nav_text; }
 lv_style_t * sh_style_text_zh(void) { return &g_style_text_zh; }
+lv_style_t * sh_style_text_zh_large(void) { return &g_style_text_zh_large; }
+lv_style_t * sh_style_text_zh_small(void) { return &g_style_text_zh_small; }
 lv_style_t * sh_style_btn_neutral(void) { return &g_style_btn_neutral; }
 lv_style_t * sh_style_btn_neutral_pressed(void) { return &g_style_btn_neutral_pressed; }
 
