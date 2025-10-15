@@ -16,10 +16,6 @@
 // LVGL 核心库
 #include "lvgl/lvgl.h"
 
-// UI 代码头文件
-#include "obj/Include/head.h"
-// #include "UI/ui.h"
-
 
 // 根据 lv_drv_conf.h 中的 USE_SDL 宏来包含不同的平台驱动头文件
 #if USE_SDL

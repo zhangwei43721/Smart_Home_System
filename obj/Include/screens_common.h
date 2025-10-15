@@ -1,7 +1,12 @@
 #ifndef SCREENS_COMMON_H
 #define SCREENS_COMMON_H
 
-#include "head.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#define SDL_MAIN_HANDLED
+#include "lv_drivers/sdl/sdl.h"
+#include "lvgl/lvgl.h"
 
 void sh_init_styles_once(void);
 lv_font_t * sh_get_font_zh(void);

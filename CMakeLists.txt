@@ -85,22 +85,17 @@ include_directories(
     .
     libs/SDL2/include
     libs/freetype/include
-    # UI
     lvgl
     lv_drivers
-    # lv_demos
-    # lv_examples
 )
 
 # --- 源文件 ---
 file(GLOB_RECURSE ALL_SOURCES
     "lvgl/src/*.c"
     "lv_drivers/*.c"
-    # "lvgl/demos/*.c" 
-    # "lvgl/examples/*.c" 
-    # "UI/*.c"
     "obj/*.c"
     "obj/*/*.c"
+    "obj/*/*/*.c"
 )
 
 # 过滤掉文件名中包含连字符('-')的 C 文件（如 chart-line.c、partly-cloudy.c 等），
@@ -108,17 +103,9 @@ file(GLOB_RECURSE ALL_SOURCES
 list(FILTER ALL_SOURCES EXCLUDE REGEX ".*/obj/.*/[^/]*-[^/]*\\.c$")
 # --- 构建主程序 ---
 # 明确加入新屏文件，避免 GLOB 未更新时丢失
-set(APP_SCREENS
-    obj/screens_common.c
-    obj/screen_dashboard.c
-    obj/screen_lighting.c
-    obj/screen_security.c
-    obj/screen_energy.c
-    obj/screen_climate.c
-    obj/screen_scenes.c
-)
 
-add_executable(${PROJECT_NAME} main.c  ${ALL_SOURCES} ${APP_SCREENS})
+
+add_executable(${PROJECT_NAME} main.c  ${ALL_SOURCES})
 
 # --- 链接平台库 ---
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PLATFORM_LIBS})

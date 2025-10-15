@@ -1,5 +1,4 @@
-#include "obj/Include/head.h"
-#include <string.h>
+
 #include "obj/Include/screens_common.h"
 #include "obj/Include/screen_dashboard.h"
 #include "obj/Include/screen_lighting.h"
