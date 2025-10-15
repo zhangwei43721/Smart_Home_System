@@ -1,5 +1,9 @@
 #include "obj/Include/screen_dashboard.h"
 #include "obj/http/weather.h"
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 // JoyPixels emoji C 数组（仅使用无连字符的符号名，避免编译问题）
 extern const lv_img_dsc_t cloud;
 extern const lv_img_dsc_t bolt;
@@ -7,6 +11,73 @@ extern const lv_img_dsc_t thermometer;
 extern const lv_img_dsc_t home;
 extern const lv_img_dsc_t door;
 extern const lv_img_dsc_t film;
+
+typedef struct {
+  lv_obj_t *icon;
+  lv_obj_t *label;
+  char location[64];
+  char key[64];
+} WeatherUpdater;
+
+typedef struct {
+  WeatherUpdater *wu;
+  sh_weather_now_t wn;
+} WeatherApplyCtx;
+
+static void apply_weather_cb(void *p) {
+  WeatherApplyCtx *ctx = (WeatherApplyCtx *)p;
+  if (!ctx || !ctx->wu) return;
+  const lv_img_dsc_t *ic = sh_weather_icon(ctx->wn.code);
+  if (ic) lv_img_set_src(ctx->wu->icon, ic);
+  char buf[128];
+  snprintf(buf, sizeof(buf), "%s · %s %s℃",
+           ctx->wn.location[0]?ctx->wn.location:"-",
+           ctx->wn.text[0]?ctx->wn.text:"-",
+           ctx->wn.temperature[0]?ctx->wn.temperature:"-");
+  lv_label_set_text(ctx->wu->label, buf);
+  free(ctx);
+}
+
+// 天气更新线程函数
+static void *weather_thread(void *arg) {
+  WeatherUpdater *wu = (WeatherUpdater *)arg;
+  while (1) {
+    sh_weather_now_t wn; char err[128];
+    if (sh_weather_fetch_now(wu->location, wu->key, &wn, err, sizeof(err)) == 0) {
+      WeatherApplyCtx *ctx = (WeatherApplyCtx *)malloc(sizeof(WeatherApplyCtx));
+      if (ctx) { ctx->wu = wu; ctx->wn = wn; lv_async_call(apply_weather_cb, ctx); }
+    }
+    sleep(3600); // 每小时更新一次
+  }
+  return NULL;
+}
+
+static int s_ac_temp = 24;
+typedef struct { lv_obj_t *title; lv_obj_t *temp; } AcCtx;
+static AcCtx s_ac_ctx;
+
+static void ac_update_labels(lv_obj_t *title_label, lv_obj_t *temp_label) {
+  if (title_label) {
+    char t[32]; snprintf(t, sizeof(t), "空调 · 客厅 %d℃", s_ac_temp);
+    lv_label_set_text(title_label, t);
+  }
+  if (temp_label) {
+    char t2[16]; snprintf(t2, sizeof(t2), "%d℃", s_ac_temp);
+    lv_label_set_text(temp_label, t2);
+  }
+}
+
+static void ac_dec_event_cb(lv_event_t * e) {
+  LV_UNUSED(e);
+  if (s_ac_temp > 16) s_ac_temp--;
+  ac_update_labels(s_ac_ctx.title, s_ac_ctx.temp);
+}
+
+static void ac_inc_event_cb(lv_event_t * e) {
+  LV_UNUSED(e);
+  if (s_ac_temp < 30) s_ac_temp++;
+  ac_update_labels(s_ac_ctx.title, s_ac_ctx.temp);
+}
 
 void screen_dashboard_build(void) {
   sh_init_styles_once();
@@ -37,6 +108,7 @@ void screen_dashboard_build(void) {
   lv_obj_t * card_weather = lv_obj_create(list);
   lv_obj_add_style(card_weather, sh_style_card_info(), 0);
   lv_obj_set_size(card_weather, 800 - 24, 80);
+  lv_obj_clear_flag(card_weather, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_t * w_icon = lv_img_create(card_weather);
   lv_img_set_src(w_icon, sh_weather_icon("cloud"));
   lv_img_set_zoom(w_icon, 114);
@@ -52,16 +124,26 @@ void screen_dashboard_build(void) {
     if (sh_weather_fetch_now("guangzhou", "SirtAO6oBdxoM34w9", &wn, werr, sizeof(werr)) == 0) {
       const lv_img_dsc_t *ic = sh_weather_icon(wn.code);
       if (ic) lv_img_set_src(w_icon, ic);
-      char buf[64];
+      char buf[128];
       snprintf(buf, sizeof(buf), "%s · %s %s℃", wn.location[0]?wn.location:"-", wn.text[0]?wn.text:"-", wn.temperature[0]?wn.temperature:"-");
       lv_label_set_text(w_city, buf);
     }
+  }
+
+  // 启动天气后台线程（每小时更新一次）
+  WeatherUpdater *wu = (WeatherUpdater *)malloc(sizeof(WeatherUpdater));
+  if (wu) {
+    wu->icon = w_icon; wu->label = w_city;
+    snprintf(wu->location, sizeof(wu->location), "%s", "guangzhou");
+    snprintf(wu->key, sizeof(wu->key), "%s", "SirtAO6oBdxoM34w9");
+    pthread_t th; pthread_create(&th, NULL, weather_thread, wu); pthread_detach(th);
   }
 
   // 能耗概览（宽卡）
   lv_obj_t * card_energy = lv_obj_create(list);
   lv_obj_add_style(card_energy, sh_style_card(), 0);
   lv_obj_set_size(card_energy, 800 - 24, 90);
+  lv_obj_clear_flag(card_energy, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_t * e_icon = lv_img_create(card_energy);
   lv_img_set_src(e_icon, &bolt);
   lv_img_set_zoom(e_icon, 114);
@@ -77,6 +159,7 @@ void screen_dashboard_build(void) {
   lv_obj_t * card_climate = lv_obj_create(list);
   lv_obj_add_style(card_climate, sh_style_card(), 0);
   lv_obj_set_size(card_climate, (800 - 24 - 12) / 2, 140);
+  lv_obj_clear_flag(card_climate, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_t * c_icon = lv_img_create(card_climate);
   lv_img_set_src(c_icon, &thermometer);
   lv_img_set_zoom(c_icon, 114);
@@ -87,16 +170,21 @@ void screen_dashboard_build(void) {
   lv_obj_add_style(lbl_c, sh_style_text_zh(), 0);
   lv_obj_set_style_text_color(lbl_c, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align_to(lbl_c, c_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+  // 开关
+  lv_obj_t * sw = lv_switch_create(card_climate);
+  lv_obj_align(sw, LV_ALIGN_TOP_RIGHT, -8, 4);
+
   lv_obj_t * row_c = lv_obj_create(card_climate);
   lv_obj_remove_style_all(row_c);
   lv_obj_set_size(row_c, ((800 - 24 - 12) / 2) - 16, 40);
   lv_obj_align(row_c, LV_ALIGN_BOTTOM_LEFT, 8, -8);
   lv_obj_set_flex_flow(row_c, LV_FLEX_FLOW_ROW);
-  lv_obj_set_flex_align(row_c, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_flex_align(row_c, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_column(row_c, 8, 0);
   lv_obj_t * btn_c_dec = lv_btn_create(row_c);
   lv_obj_add_style(btn_c_dec, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(btn_c_dec, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
-  lv_obj_set_size(btn_c_dec, 56, 36);
+  lv_obj_set_size(btn_c_dec, 44, 36);
   lv_obj_t * lbd = lv_label_create(btn_c_dec);
   lv_label_set_text(lbd, "-");
   lv_obj_center(lbd);
@@ -107,15 +195,24 @@ void screen_dashboard_build(void) {
   lv_obj_t * btn_c_inc = lv_btn_create(row_c);
   lv_obj_add_style(btn_c_inc, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(btn_c_inc, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
-  lv_obj_set_size(btn_c_inc, 56, 36);
+  lv_obj_set_size(btn_c_inc, 44, 36);
   lv_obj_t * lbi = lv_label_create(btn_c_inc);
   lv_label_set_text(lbi, "+");
   lv_obj_center(lbi);
+
+  // 设置加减事件：更新温度显示
+  s_ac_ctx.title = lbl_c; s_ac_ctx.temp = temp;
+  lv_obj_add_event_cb(btn_c_dec, ac_dec_event_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(btn_c_inc, ac_inc_event_cb, LV_EVENT_CLICKED, NULL);
+
+  // 初始同步
+  ac_update_labels(lbl_c, temp);
 
   // 快捷场景（半宽卡，与空调并排）
   lv_obj_t * card_scene = lv_obj_create(list);
   lv_obj_add_style(card_scene, sh_style_card(), 0);
   lv_obj_set_size(card_scene, (800 - 24 - 12) / 2, 140);
+  lv_obj_clear_flag(card_scene, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_t * s_icon = lv_img_create(card_scene);
   lv_img_set_src(s_icon, &home);
   lv_img_set_zoom(s_icon, 114);
@@ -131,29 +228,19 @@ void screen_dashboard_build(void) {
   lv_obj_set_size(row_s, ((800 - 24 - 12) / 2) - 16, 40);
   lv_obj_align(row_s, LV_ALIGN_BOTTOM_LEFT, 8, -8);
   lv_obj_set_flex_flow(row_s, LV_FLEX_FLOW_ROW);
-  lv_obj_set_flex_align(row_s, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_flex_align(row_s, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_column(row_s, 8, 0);
   const char * qscenes[] = {"到家", "离家", "观影"};
   for (int qi = 0; qi < 3; ++qi) {
     lv_obj_t * b = lv_btn_create(row_s);
     lv_obj_add_style(b, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(b, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_set_size(b, 72, 36);
-    // 图标 + 文本
-    lv_obj_t * rowi = lv_obj_create(b);
-    lv_obj_remove_style_all(rowi);
-    lv_obj_set_size(rowi, 68, 30);
-    lv_obj_set_flex_flow(rowi, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(rowi, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    lv_obj_t * ib = lv_img_create(rowi);
-    if (qi == 0) lv_img_set_src(ib, &home);
-    else if (qi == 1) lv_img_set_src(ib, &door);
-    else lv_img_set_src(ib, &film);
-    lv_img_set_zoom(ib, 114);
-
-    lv_obj_t * lb = lv_label_create(rowi);
+    lv_obj_set_size(b, 64, 36);
+    
+    lv_obj_t * lb = lv_label_create(b);
     lv_obj_add_style(lb, sh_style_text_zh(), 0);
     lv_label_set_text(lb, qscenes[qi]);
+    lv_obj_center(lb);
   }
 
   const char * titles[] = {
