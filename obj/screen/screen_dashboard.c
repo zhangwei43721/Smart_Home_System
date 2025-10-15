@@ -1,4 +1,5 @@
 #include "obj/Include/screen_dashboard.h"
+#include "obj/http/weather.h"
 // JoyPixels emoji C 数组（仅使用无连字符的符号名，避免编译问题）
 extern const lv_img_dsc_t cloud;
 extern const lv_img_dsc_t bolt;
@@ -45,6 +46,17 @@ void screen_dashboard_build(void) {
   lv_obj_add_style(w_city, sh_style_text_zh(), 0);
   lv_label_set_text(w_city, "上海 · 多云 26℃ · 空气优");
   lv_obj_align_to(w_city, w_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+
+  {
+    sh_weather_now_t wn; char werr[128];
+    if (sh_weather_fetch_now("guangzhou", "SirtAO6oBdxoM34w9", &wn, werr, sizeof(werr)) == 0) {
+      const lv_img_dsc_t *ic = sh_weather_icon(wn.code);
+      if (ic) lv_img_set_src(w_icon, ic);
+      char buf[64];
+      snprintf(buf, sizeof(buf), "%s · %s %s℃", wn.location[0]?wn.location:"-", wn.text[0]?wn.text:"-", wn.temperature[0]?wn.temperature:"-");
+      lv_label_set_text(w_city, buf);
+    }
+  }
 
   // 能耗概览（宽卡）
   lv_obj_t * card_energy = lv_obj_create(list);

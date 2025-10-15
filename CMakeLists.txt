@@ -87,6 +87,7 @@ include_directories(
     libs/freetype/include
     lvgl
     lv_drivers
+    libs/cJSON
 )
 
 # --- 源文件 ---
@@ -96,6 +97,7 @@ file(GLOB_RECURSE ALL_SOURCES
     "obj/*.c"
     "obj/*/*.c"
     "obj/*/*/*.c"
+    "libs/cJSON/*.c"
 )
 
 # 过滤掉文件名中包含连字符('-')的 C 文件（如 chart-line.c、partly-cloudy.c 等），

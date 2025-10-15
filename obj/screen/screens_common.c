@@ -1,6 +1,7 @@
 #include "obj/Include/screens_common.h"
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 // JoyPixels emoji symbols used by helpers (only names without hyphen)
 extern const lv_img_dsc_t sunny;
 extern const lv_img_dsc_t cloud;
@@ -146,6 +147,17 @@ const lv_img_dsc_t * sh_weather_icon(const char * code) {
   if (!strcmp(code, "thunder") || !strcmp(code, "thunderstorm") || !strcmp(code, "storm")) return &thunderstorm;
   if (!strcmp(code, "wind") || !strcmp(code, "windy")) return &wind;
   if (!strcmp(code, "night") || !strcmp(code, "moon")) return &moon;
+  // numeric code from Seniverse
+  if (code[0] >= '0' && code[0] <= '9') {
+    int v = atoi(code);
+    if (v == 0) return &sunny;           // 晴
+    if (v >= 1 && v <= 4) return &cloud; // 多云/阴
+    if (v >= 5 && v <= 8) return &fog;   // 雾/霾
+    if (v >= 9 && v <= 18) return &rain; // 各类雨
+    if (v >= 19 && v <= 25) return &snow;// 各类雪
+    if (v >= 26 && v <= 29) return &wind;// 风
+    if (v >= 30 && v <= 31) return &thunderstorm; // 雷暴
+  }
   // default
   return &cloud;
 }
