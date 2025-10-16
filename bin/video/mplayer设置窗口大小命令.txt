@@ -1,0 +1,20 @@
+mplayer -slave -quiet -input  file=/pipe -geometry 0:0  -zoom -x 400 -y 400  mn.avi
+			(在LCD屏幕的那个坐标开始播放)
+
+-x 400 -y 400   -》代表播放的视频宽度 和长度。  
+
+
+-geometry 起点位置
+-slave  -》使用命令模式
+-quiet   去除杂项信息
+-input  file=/pipe  指定命令读取的管道
+-zoom -x 400 -y 400  指定播放窗体的大小
+
+
+1.把 mplayer 放在开发板的/bin 文件夹下面
+
+2.创建管道   【  /】mkfifo pipe
+
+3.播放命令进行播放视频
+
+4.切换的话，先杀掉再换视频

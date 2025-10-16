@@ -4,6 +4,7 @@
 #include "obj/Include/screen_lighting.h"
 #include "obj/Include/screen_security.h"
 #include "obj/Include/screen_energy.h"
+#include "obj/Include/screen_entertainment.h"
 
 // 仅在本文件保留底栏相关样式
 static lv_style_t style_nav_text;
@@ -42,6 +43,7 @@ static void on_nav_to_dashboard(lv_event_t * e);
 static void on_nav_to_lighting(lv_event_t * e);
 static void on_nav_to_security(lv_event_t * e);
 static void on_nav_to_energy(lv_event_t * e);
+static void on_nav_to_entertainment(lv_event_t * e);
 
 // 创建底部导航栏（三个 Tab：概览/照明/安防）
 static void create_bottom_nav(const char *active) {
@@ -98,6 +100,20 @@ static void create_bottom_nav(const char *active) {
   lv_label_set_text(lbl_sec, "安防");
   lv_obj_add_style(lbl_sec, &style_nav_text, 0);
   lv_obj_center(lbl_sec);
+
+  // 娱乐按钮
+  lv_obj_t * btn_ent = lv_btn_create(nav);
+  lv_obj_set_size(btn_ent, 120, 40);
+  lv_obj_add_style(btn_ent, &style_nav_btn, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(btn_ent, &style_nav_btn_checked, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_add_event_cb(btn_ent, on_nav_to_entertainment, LV_EVENT_CLICKED, NULL);
+  if (active && strcmp(active, "entertainment")==0) {
+    lv_obj_add_state(btn_ent, LV_STATE_CHECKED);
+  }
+  lv_obj_t * lbl_ent = lv_label_create(btn_ent);
+  lv_label_set_text(lbl_ent, "娱乐");
+  lv_obj_add_style(lbl_ent, &style_nav_text, 0);
+  lv_obj_center(lbl_ent);
 
   LV_UNUSED(active);
 }
@@ -159,6 +175,16 @@ static void on_nav_to_energy(lv_event_t * e) {
   create_bottom_nav("energy");
 }
 
+// 事件：切到娱乐
+static void on_nav_to_entertainment(lv_event_t * e) {
+  LV_UNUSED(e);
+  clear_screen();
+  init_styles_once();
+  create_topbar("娱乐 Entertainment");
+  screen_entertainment_build();
+  create_bottom_nav("entertainment");
+}
+
 
 // 对外导出：加载概览屏
 void demo_dashboard(void) {
@@ -178,4 +204,9 @@ void demo_security(void) {
 // 对外导出：加载能耗屏
 void demo_energy(void) {
   on_nav_to_energy(NULL);
+}
+
+// 对外导出：加载娱乐屏
+void demo_entertainment(void) {
+  on_nav_to_entertainment(NULL);
 }

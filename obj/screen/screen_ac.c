@@ -278,9 +278,9 @@ void screen_ac_build(void) {
     
     // 3. 创建左上角返回按钮
     lv_obj_t * btn_back = lv_btn_create(scr);
-    lv_obj_set_size(btn_back, 40, 40);
+    lv_obj_set_size(btn_back, 50, 50);
     lv_obj_set_style_radius(btn_back, LV_RADIUS_CIRCLE, 0);
-    lv_obj_align(btn_back, LV_ALIGN_TOP_LEFT, 5, 5);
+    lv_obj_align(btn_back, LV_ALIGN_BOTTOM_LEFT, 25, -25);
     lv_obj_add_event_cb(btn_back, on_back_event, LV_EVENT_CLICKED, NULL);
     lv_label_set_text(lv_label_create(btn_back), LV_SYMBOL_LEFT);
     

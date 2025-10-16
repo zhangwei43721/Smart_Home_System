@@ -1,0 +1,60 @@
+一、音乐播放器的制作。
+	1）查看madplay音频解码器是否在GEC6818开发板中。
+	find / -name "madplay"
+	
+	[root@GEC6818 /]#find / -name "madplay"
+	/usr/bin/madplay
+	[root@GEC6818 /usr/bin]# cp madplay /bin                //或者修改环境变量
+	
+	2）通过终端输入命名来播放歌曲。
+	播放的方法：madplay + 歌曲路径。
+	举例：
+			播放/root/project/mp3/1.mp3歌曲。
+			madplay /root/project/mp3/1.mp3
+	
+	3）通过程序来播放歌曲。
+	播放的方法：使用system函数调用终端播放歌曲的命令。
+	举例：
+			播放/root/project/mp3/1.mp3歌曲。
+			system("madplay /root/project/mp3/1.mp3 &"); 
+	
+	//&表示后台播放，系统会自动创建一条线程来播放歌曲，不影响整个程序的运行。
+	
+	4）暂停、继续、结束
+	gec@ubuntu:~$ kill -l
+	 1) SIGHUP	 2) SIGINT	 3) SIGQUIT	 4) SIGILL	 5) SIGTRAP
+	 6) SIGABRT	 7) SIGBUS	 8) SIGFPE	 9) SIGKILL	10) SIGUSR1
+	11) SIGSEGV	12) SIGUSR2	13) SIGPIPE	14) SIGALRM	15) SIGTERM
+	16) SIGSTKFLT	17) SIGCHLD	18) SIGCONT	19) SIGSTOP	20) SIGTSTP
+	21) SIGTTIN	22) SIGTTOU	23) SIGURG	24) SIGXCPU	25) SIGXFSZ
+	26) SIGVTALRM	27) SIGPROF	28) SIGWINCH	29) SIGIO	30) SIGPWR
+	31) SIGSYS	34) SIGRTMIN	35) SIGRTMIN+1	36) SIGRTMIN+2	37) SIGRTMIN+3
+	38) SIGRTMIN+4	39) SIGRTMIN+5	40) SIGRTMIN+6	41) SIGRTMIN+7	42) SIGRTMIN+8
+	43) SIGRTMIN+9	44) SIGRTMIN+10	45) SIGRTMIN+11	46) SIGRTMIN+12	47) SIGRTMIN+13
+	48) SIGRTMIN+14	49) SIGRTMIN+15	50) SIGRTMAX-14	51) SIGRTMAX-13	52) SIGRTMAX-12
+	53) SIGRTMAX-11	54) SIGRTMAX-10	55) SIGRTMAX-9	56) SIGRTMAX-8	57) SIGRTMAX-7
+	58) SIGRTMAX-6	59) SIGRTMAX-5	60) SIGRTMAX-4	61) SIGRTMAX-3	62) SIGRTMAX-2
+	63) SIGRTMAX-1	64) SIGRTMAX	
+	gec@ubuntu:~$ 
+	
+		1）暂停 19) SIGSTOP
+		system("killall -19 madplay");
+
+		2）继续 18) SIGCONT
+		system("killall -18 madplay");
+	
+		3）结束 9) SIGKILL
+		system("killall -9 madplay");
+	
+	5）上一首、下一首
+		参考电子相册的算法设计。
+
+项目分项：
+	制作音乐播放器
+
+		1） 点击“上一首”，播放上一首音乐。
+		2） 点击“下一首”，播放下一首音乐。
+		3） 点击“暂停”，暂停正在播放音乐。
+		4） 点击“继续”，继续播放暂停的音乐。
+		5） 点击“结束”，结束正在播放的音乐。
+		6） 点击“退出”，退出音乐播放器的界面。
