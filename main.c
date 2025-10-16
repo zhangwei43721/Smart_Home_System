@@ -24,6 +24,16 @@ static void my_log_cb(const char * buf)
   fflush(stdout);
 }
 
+#if !USE_SDL
+static void sync_time_on_startup(void)
+{
+    system("sh -c 'echo ""CST-8"" > /etc/TZ'");
+    system("sh -c 'grep -q ""export TZ=\\$(cat /etc/TZ)"" /etc/profile || echo ""export TZ=\\$(cat /etc/TZ)"" >> /etc/profile'");
+    system("busybox ntpd -p cn.pool.ntp.org -q || ntpd -q -p cn.pool.ntp.org");
+    system("hwclock -w");
+}
+#endif
+
 // 根据 lv_drv_conf.h 中的 USE_SDL 宏来包含不同的平台驱动头文件
 #if USE_SDL
     /* ========================= */
@@ -47,6 +57,7 @@ static void my_log_cb(const char * buf)
  *  STATIC PROTOTYPES
  **********************/
 static void hal_init(void);
+static void sync_time_on_startup(void);
 
 
 /**********************
@@ -63,6 +74,10 @@ int main(int argc, char **argv)
     lv_log_register_print_cb(my_log_cb);
 
     lv_fs_posix_init();
+
+#if !USE_SDL
+    sync_time_on_startup();
+#endif
 
     /* 初始化 HAL (显示, 输入设备, tick) */
     hal_init();

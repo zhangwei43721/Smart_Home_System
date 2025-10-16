@@ -416,10 +416,8 @@ static void play_video_at_index(int index) {
 
   // 启动mplayer
   char cmd[1024];
-  // 注意：坐标(0:48)和尺寸(-x 450 -y 240)需要根据你的UI布局微调
   snprintf(cmd, sizeof(cmd),
-           "./mplayer -slave -quiet -input file=%s -geometry 0:48 -zoom -x 450 "
-           "-y 240 ./media/%s &",
+           "mplayer -slave -quiet -noborder -input file=%s -geometry 241:145 -zoom -x 453 -y 240 ./media/%s &",
            fifo_path, g_video_files[index]);
   system(cmd);
 
