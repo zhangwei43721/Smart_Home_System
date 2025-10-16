@@ -157,11 +157,6 @@ static void hal_init(void)
     indev_drv_1.read_cb = evdev_read;
     lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv_1);
 
-    LV_IMG_DECLARE(mouse_cursor_icon)
-    lv_obj_t * cursor_obj = lv_img_create(lv_scr_act());
-    lv_img_set_src(cursor_obj, &mouse_cursor_icon);
-    lv_indev_set_cursor(mouse_indev, cursor_obj);
-
 #endif
 }
 
