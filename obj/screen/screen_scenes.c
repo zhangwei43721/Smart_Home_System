@@ -33,7 +33,7 @@ void screen_scenes_build(void) {
 
     lv_obj_t * title = lv_label_create(card);
     lv_label_set_text(title, names[i]);
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(title, sh_get_font_zh(), 0);
+    lv_obj_add_style(title, sh_style_text_zh_semibold(), 0);
     lv_obj_set_style_text_color(title, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 6);
 
@@ -44,6 +44,7 @@ void screen_scenes_build(void) {
     lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, -8, -8);
     lv_obj_t * lbl = lv_label_create(btn);
     lv_label_set_text(lbl, "执行");
+    lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
     lv_obj_center(lbl);
   }
 }

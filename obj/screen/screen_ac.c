@@ -180,7 +180,7 @@ void screen_ac_build(void) {
     lv_obj_set_style_pad_row(left_panel, 15, 0);
 
     lv_obj_t* lbl_curr = lv_label_create(left_panel);
-    lv_obj_add_style(lbl_curr, sh_style_text_zh(), 0);
+    lv_obj_add_style(lbl_curr, sh_style_text_zh_small(), 0);
     lv_label_set_text_fmt(lbl_curr, "当前室温 %d°C", g_ac_state.temperature_current);
     
     g_ac_state.ui.label_temp_target = lv_label_create(left_panel);
@@ -204,7 +204,7 @@ void screen_ac_build(void) {
     lv_obj_add_event_cb(btn_minus, on_temp_change, LV_EVENT_CLICKED, (void*)-1);
     {
         lv_obj_t* lbl = lv_label_create(btn_minus);
-        lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+        lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
         lv_label_set_text(lbl, "-");
     }
 
@@ -213,7 +213,7 @@ void screen_ac_build(void) {
     lv_obj_add_event_cb(btn_plus, on_temp_change, LV_EVENT_CLICKED, (void*)1);
     {
         lv_obj_t* lbl = lv_label_create(btn_plus);
-        lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+        lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
         lv_label_set_text(lbl, "+");
     }
     
@@ -239,7 +239,7 @@ void screen_ac_build(void) {
     lv_obj_add_event_cb(g_ac_state.ui.btn_power, on_power_toggle, LV_EVENT_CLICKED, NULL);
     {
         lv_obj_t* lbl = lv_label_create(g_ac_state.ui.btn_power);
-        lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+        lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
         lv_label_set_text(lbl, "电源");
     }
     
@@ -256,7 +256,7 @@ void screen_ac_build(void) {
         lv_obj_add_event_cb(g_ac_state.ui.mode_btns[i], on_mode_select, LV_EVENT_CLICKED, (void*)(intptr_t)i);
         {
             lv_obj_t* lbl = lv_label_create(g_ac_state.ui.mode_btns[i]);
-            lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+            lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
             lv_label_set_text(lbl, mode_texts[i]);
         }
     }
@@ -271,7 +271,7 @@ void screen_ac_build(void) {
         lv_obj_add_event_cb(g_ac_state.ui.fan_btns[i], on_fan_select, LV_EVENT_CLICKED, (void*)(intptr_t)i);
         {
             lv_obj_t* lbl = lv_label_create(g_ac_state.ui.fan_btns[i]);
-            lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+            lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
             lv_label_set_text(lbl, fan_texts[i]);
         }
     }

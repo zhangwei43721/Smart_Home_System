@@ -21,7 +21,7 @@ void screen_energy_build(void) {
   lv_obj_set_size(card_total, 800 - 24, 90);
   lv_obj_t * t1 = lv_label_create(card_total);
   lv_label_set_text(t1, "今日用电 3.6kWh · 本月 62kWh");
-  if (sh_get_font_zh()) lv_obj_set_style_text_font(t1, sh_get_font_zh(), 0);
+  lv_obj_add_style(t1, sh_style_text_zh_small(), 0);
   lv_obj_set_style_text_color(t1, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align(t1, LV_ALIGN_LEFT_MID, 8, 0);
 
@@ -37,7 +37,7 @@ void screen_energy_build(void) {
 
     lv_obj_t * name = lv_label_create(row);
     lv_label_set_text_fmt(name, "%s %d%%", names[i], values[i]);
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(name, sh_get_font_zh(), 0);
+    lv_obj_add_style(name, sh_style_text_zh_small(), 0);
     lv_obj_set_style_text_color(name, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
 
     lv_obj_t * bar = lv_bar_create(row);

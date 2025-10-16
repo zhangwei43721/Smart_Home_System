@@ -89,21 +89,26 @@ static void on_card_click(lv_event_t *e) {
     lv_obj_set_size(dlg, 360, 240); // 增加一点高度以容纳标题
     lv_obj_center(dlg);
     lv_obj_set_style_bg_color(dlg, lv_color_white(), 0);
+    lv_obj_set_style_bg_opa(dlg, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(dlg, 12, 0);
     lv_obj_set_style_pad_all(dlg, 15, 0);
     lv_obj_set_flex_flow(dlg, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(dlg, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_row(dlg, 10, 0); // 设置行间距
+    // Material 风格阴影
+    lv_obj_set_style_shadow_width(dlg, 10, 0);
+    lv_obj_set_style_shadow_ofs_y(dlg, 6, 0);
+    lv_obj_set_style_shadow_color(dlg, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
 
     // 弹窗标题
     lv_obj_t * lbl_title = lv_label_create(dlg);
     lv_label_set_text_fmt(lbl_title, "%s 调节", g_lights[idx].name);
-    lv_obj_add_style(lbl_title, sh_style_text_zh(), 0);
+    lv_obj_add_style(lbl_title, sh_style_text_zh_semibold(), 0);
 
     // 亮度
     lv_obj_t * lbl_b = lv_label_create(dlg);
     lv_label_set_text(lbl_b, "亮度");
-    lv_obj_add_style(lbl_b, sh_style_text_zh(), 0);
+    lv_obj_add_style(lbl_b, sh_style_text_zh_small(), 0);
     lv_obj_t * s_b = lv_slider_create(dlg);
     lv_obj_set_width(s_b, LV_PCT(100));
     lv_slider_set_range(s_b, 0, 100);
@@ -113,7 +118,7 @@ static void on_card_click(lv_event_t *e) {
     // 色温
     lv_obj_t * lbl_c = lv_label_create(dlg);
     lv_label_set_text(lbl_c, "色温");
-  lv_obj_add_style(lbl_c, sh_style_text_zh(), 0);
+    lv_obj_add_style(lbl_c, sh_style_text_zh_small(), 0);
     lv_obj_t * s_c = lv_slider_create(dlg);
     lv_obj_set_width(s_c, LV_PCT(100));
     lv_slider_set_range(s_c, 2700, 6500);
@@ -121,13 +126,13 @@ static void on_card_click(lv_event_t *e) {
     lv_obj_add_event_cb(s_c, on_dialog_ct_changed, LV_EVENT_VALUE_CHANGED, ctx);
     
     // “完成” 按钮
-    lv_obj_t * ok = lv_btn_create(mask); // 将按钮也创建在蒙层上
+    lv_obj_t * ok = lv_btn_create(dlg); // 将按钮创建在弹窗内
     lv_obj_set_size(ok, 88, 36);
-    lv_obj_align_to(ok, dlg, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+    lv_obj_align(ok, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_add_event_cb(ok, on_dialog_close, LV_EVENT_CLICKED, ctx);
     lv_obj_t* lb = lv_label_create(ok);
     lv_label_set_text(lb, "完成");
-    lv_obj_add_style(lb, sh_style_text_zh(), 0);
+    lv_obj_add_style(lb, sh_style_text_zh_small(), 0);
     lv_obj_center(lb);
 }
 
@@ -213,9 +218,7 @@ void screen_lighting_build(void) {
     for (int i = 0; i < LIGHT_COUNT; ++i) {
         lv_obj_t * card = lv_obj_create(grid);
         lv_obj_remove_style_all(card);
-        // lv_obj_add_style(card, sh_style_card(), 0); // 使用你的卡片样式
-        lv_obj_set_style_bg_color(card, lv_color_white(), 0);
-        lv_obj_set_style_radius(card, 10, 0);
+        lv_obj_add_style(card, sh_style_card(), 0); // 使用通用卡片样式
         lv_obj_set_size(card, card_w, card_h);
 
         g_lights[i].card = card; // 将UI对象与数据关联起来
@@ -228,13 +231,13 @@ void screen_lighting_build(void) {
         // 2. 名称
         lv_obj_t * name = lv_label_create(card);
         lv_label_set_text(name, g_lights[i].name);
-        lv_obj_add_style(name, sh_style_text_zh(), 0);
+        lv_obj_add_style(name, sh_style_text_zh_semibold(), 0);
         lv_obj_align(name, LV_ALIGN_TOP_LEFT, 8, 8);
         // lv_obj_set_style_text_font(name, sh_get_font_zh(), 0);
 
         // 3. 状态标签 (用于显示亮度/色温或开关状态)
         lv_obj_t * status = lv_label_create(card);
-        lv_obj_add_style(status, sh_style_text_zh(), 0);
+        lv_obj_add_style(status, sh_style_text_zh_small(), 0);
         lv_obj_set_style_text_color(status, lv_palette_darken(LV_PALETTE_GREY, 2), 0);
         lv_obj_align_to(status, name, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 4);
 

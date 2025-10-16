@@ -16,7 +16,7 @@ static void init_styles_once(void) {
   if (g_nav_inited) return;
   sh_init_styles_once();
   lv_style_init(&style_nav_text);
-  lv_style_set_text_font(&style_nav_text, sh_get_font_zh() ? sh_get_font_zh() : LV_FONT_DEFAULT);
+  lv_style_set_text_font(&style_nav_text, sh_get_font_zh_semibold() ? sh_get_font_zh_semibold() : LV_FONT_DEFAULT);
   lv_style_set_text_color(&style_nav_text, lv_palette_darken(LV_PALETTE_GREY, 3));
 
   lv_style_init(&style_nav_btn);

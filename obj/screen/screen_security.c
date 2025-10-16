@@ -56,22 +56,27 @@ static void on_detail_clicked(lv_event_t *e) {
   lv_obj_set_size(dlg, 420, 300);
   lv_obj_center(dlg);
   lv_obj_set_style_bg_color(dlg, lv_color_white(), 0);
+  lv_obj_set_style_bg_opa(dlg, LV_OPA_COVER, 0);
   lv_obj_set_style_radius(dlg, 12, 0);
   lv_obj_set_style_pad_all(dlg, 12, 0);
   lv_obj_set_flex_flow(dlg, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_flex_align(dlg, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
   lv_obj_set_style_pad_row(dlg, 6, 0);
+  // Material 风格阴影
+  lv_obj_set_style_shadow_width(dlg, 10, 0);
+  lv_obj_set_style_shadow_ofs_y(dlg, 6, 0);
+  lv_obj_set_style_shadow_color(dlg, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
 
   // 标题
   lv_obj_t *title = lv_label_create(dlg);
-  lv_obj_add_style(title, sh_style_text_zh(), 0);
+  lv_obj_add_style(title, sh_style_text_zh_semibold(), 0);
   lv_label_set_text_fmt(title, "%s · 最近事件", names[idx % 6]);
   lv_obj_set_style_text_color(title, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
 
   // 列表（示例数据，后续接入真实日志）
   for (int i = 0; i < 8; ++i) {
     lv_obj_t *row = lv_label_create(dlg);
-    lv_obj_add_style(row, sh_style_text_zh(), 0);
+    lv_obj_add_style(row, sh_style_text_zh_small(), 0);
     lv_obj_set_style_text_color(row, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
     // 交替显示 正常/告警 作为占位
     const char *state = (i % 3 == 1) ? "告警" : "正常";
@@ -90,7 +95,7 @@ static void on_detail_clicked(lv_event_t *e) {
   lv_obj_add_event_cb(btn, sec_detail_close, LV_EVENT_CLICKED, ctx);
   lv_obj_add_event_cb(mask, sec_detail_close, LV_EVENT_CLICKED, ctx);
   lv_obj_t *lbl = lv_label_create(btn);
-  lv_obj_add_style(lbl, sh_style_text_zh(), 0);
+  lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
   lv_label_set_text(lbl, "关闭");
   lv_obj_set_style_text_color(lbl, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_center(lbl);
@@ -160,13 +165,13 @@ void screen_security_build(void) {
 
     lv_obj_t * title = lv_label_create(card);
     lv_label_set_text(title, items[i]);
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(title, sh_get_font_zh(), 0);
+    lv_obj_add_style(title, sh_style_text_zh_semibold(), 0);
     lv_obj_set_style_text_color(title, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 6);
 
     lv_obj_t * status = lv_label_create(card);
     lv_label_set_text(status, (i % 2 == 0) ? "正常" : "告警");
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(status, sh_get_font_zh(), 0);
+    lv_obj_add_style(status, sh_style_text_zh_small(), 0);
     lv_obj_set_style_text_color(status, (i % 2 == 0) ? lv_palette_darken(LV_PALETTE_GREY, 3)
                                                      : lv_palette_main(LV_PALETTE_RED), 0);
     lv_obj_align(status, LV_ALIGN_LEFT_MID, 8, 0);
@@ -179,7 +184,7 @@ void screen_security_build(void) {
     lv_obj_add_event_cb(btn, on_detail_clicked, LV_EVENT_CLICKED, (void*)(intptr_t)i);
     lv_obj_t * lbl = lv_label_create(btn);
     lv_label_set_text(lbl, "详情");
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl, sh_get_font_zh(), 0);
+    lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
     lv_obj_set_style_text_color(lbl, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
     lv_obj_center(lbl);
   }

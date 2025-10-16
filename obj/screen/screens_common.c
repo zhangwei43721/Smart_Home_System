@@ -19,6 +19,7 @@ static lv_style_t g_style_card_info;
 static lv_style_t g_style_text_zh;
 static lv_style_t g_style_text_zh_large;
 static lv_style_t g_style_text_zh_small;
+static lv_style_t g_style_text_zh_semibold;
 static lv_style_t g_style_btn_neutral;
 static lv_style_t g_style_btn_neutral_pressed;
 static bool g_styles_inited_common = false;
@@ -26,6 +27,7 @@ static bool g_styles_inited_common = false;
 static lv_font_t * g_font_zh_common = NULL;
 static lv_font_t * g_font_zh_large = NULL;
 static lv_font_t * g_font_zh_small = NULL;
+static lv_font_t * g_font_zh_semibold = NULL;
 static lv_obj_t * g_time_label = NULL;
 static lv_timer_t * g_time_timer = NULL;
 
@@ -37,6 +39,14 @@ static void ensure_font_loaded(void) {
     info24.style = FT_FONT_STYLE_NORMAL;
     info24.mem = NULL;
     if (lv_ft_font_init(&info24)) g_font_zh_common = info24.font;
+  }
+  if (!g_font_zh_semibold) {
+    static lv_ft_info_t info24b;
+    info24b.name = "./media/MiSans-Semibold.ttf";
+    info24b.weight = 24;
+    info24b.style = FT_FONT_STYLE_NORMAL;
+    info24b.mem = NULL;
+    if (lv_ft_font_init(&info24b)) g_font_zh_semibold = info24b.font;
   }
   if (!g_font_zh_large) {
     static lv_ft_info_t info48;
@@ -61,7 +71,7 @@ void sh_init_styles_once(void) {
   ensure_font_loaded();
 
   lv_style_init(&g_style_title);
-  lv_style_set_text_font(&g_style_title, g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT);
+  lv_style_set_text_font(&g_style_title, g_font_zh_semibold ? g_font_zh_semibold : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
   lv_style_set_text_color(&g_style_title, lv_palette_darken(LV_PALETTE_GREY, 4));
 
   lv_style_init(&g_style_card);
@@ -70,7 +80,9 @@ void sh_init_styles_once(void) {
   lv_style_set_bg_opa(&g_style_card, LV_OPA_COVER);
   lv_style_set_pad_all(&g_style_card, 12);
   lv_style_set_shadow_width(&g_style_card, 6);
+  lv_style_set_shadow_ofs_y(&g_style_card, 3);
   lv_style_set_shadow_color(&g_style_card, lv_palette_lighten(LV_PALETTE_GREY, 2));
+  lv_style_set_shadow_opa(&g_style_card, LV_OPA_30);
 
   // 信息卡（淡蓝底）
   lv_style_init(&g_style_card_info);
@@ -79,10 +91,12 @@ void sh_init_styles_once(void) {
   lv_style_set_bg_opa(&g_style_card_info, LV_OPA_COVER);
   lv_style_set_pad_all(&g_style_card_info, 12);
   lv_style_set_shadow_width(&g_style_card_info, 4);
+  lv_style_set_shadow_ofs_y(&g_style_card_info, 2);
   lv_style_set_shadow_color(&g_style_card_info, lv_palette_lighten(LV_PALETTE_BLUE, 3));
+  lv_style_set_shadow_opa(&g_style_card_info, LV_OPA_30);
 
   lv_style_init(&g_style_nav_text);
-  lv_style_set_text_font(&g_style_nav_text, g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT);
+  lv_style_set_text_font(&g_style_nav_text, g_font_zh_semibold ? g_font_zh_semibold : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
   lv_style_set_text_color(&g_style_nav_text, lv_palette_darken(LV_PALETTE_GREY, 3));
 
   // 中文文本样式（示例：等效于 demo_freetype_text 中的 style）
@@ -99,6 +113,10 @@ void sh_init_styles_once(void) {
   lv_style_init(&g_style_text_zh_small);
   lv_style_set_text_font(&g_style_text_zh_small, g_font_zh_small ? g_font_zh_small : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
   lv_style_set_text_align(&g_style_text_zh_small, LV_TEXT_ALIGN_CENTER);
+
+  lv_style_init(&g_style_text_zh_semibold);
+  lv_style_set_text_font(&g_style_text_zh_semibold, g_font_zh_semibold ? g_font_zh_semibold : (g_font_zh_common ? g_font_zh_common : LV_FONT_DEFAULT));
+  lv_style_set_text_align(&g_style_text_zh_semibold, LV_TEXT_ALIGN_CENTER);
 
   lv_style_init(&g_style_btn_neutral);
   lv_style_set_radius(&g_style_btn_neutral, 10);
@@ -118,6 +136,7 @@ void sh_init_styles_once(void) {
 lv_font_t * sh_get_font_zh(void) { return g_font_zh_common; }
 lv_font_t * sh_get_font_zh_large(void) { return g_font_zh_large ? g_font_zh_large : (g_font_zh_common ? g_font_zh_common : (lv_font_t*)LV_FONT_DEFAULT); }
 lv_font_t * sh_get_font_zh_small(void) { return g_font_zh_small ? g_font_zh_small : (g_font_zh_common ? g_font_zh_common : (lv_font_t*)LV_FONT_DEFAULT); }
+lv_font_t * sh_get_font_zh_semibold(void) { return g_font_zh_semibold ? g_font_zh_semibold : (g_font_zh_common ? g_font_zh_common : (lv_font_t*)LV_FONT_DEFAULT); }
 
 lv_style_t * sh_style_title(void) { return &g_style_title; }
 lv_style_t * sh_style_card(void) { return &g_style_card; }
@@ -126,6 +145,7 @@ lv_style_t * sh_style_nav_text(void) { return &g_style_nav_text; }
 lv_style_t * sh_style_text_zh(void) { return &g_style_text_zh; }
 lv_style_t * sh_style_text_zh_large(void) { return &g_style_text_zh_large; }
 lv_style_t * sh_style_text_zh_small(void) { return &g_style_text_zh_small; }
+lv_style_t * sh_style_text_zh_semibold(void) { return &g_style_text_zh_semibold; }
 lv_style_t * sh_style_btn_neutral(void) { return &g_style_btn_neutral; }
 lv_style_t * sh_style_btn_neutral_pressed(void) { return &g_style_btn_neutral_pressed; }
 
@@ -150,6 +170,10 @@ lv_obj_t * sh_create_topbar(const char * title) {
   lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
   lv_obj_set_style_border_width(bar, 1, 0);
   lv_obj_set_style_border_color(bar, lv_palette_lighten(LV_PALETTE_GREY, 3), 0);
+  lv_obj_set_style_shadow_width(bar, 8, 0);
+  lv_obj_set_style_shadow_ofs_y(bar, 4, 0);
+  lv_obj_set_style_shadow_color(bar, lv_palette_lighten(LV_PALETTE_GREY, 3), 0);
+  lv_obj_set_style_shadow_opa(bar, LV_OPA_30, 0);
 
   lv_obj_t * lbl = lv_label_create(bar);
   lv_obj_add_style(lbl, &g_style_title, 0);

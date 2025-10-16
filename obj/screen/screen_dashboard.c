@@ -183,7 +183,7 @@ void screen_dashboard_build(void) {
 
   lv_obj_t * lbl_e = lv_label_create(card_energy);
   lv_label_set_text(lbl_e, "今日用电 3.6kWh · 本月 62kWh");
-  lv_obj_add_style(lbl_e, sh_style_text_zh(), 0);
+  lv_obj_add_style(lbl_e, sh_style_text_zh_small(), 0);
   lv_obj_set_style_text_color(lbl_e, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align_to(lbl_e, e_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
   // 预留：整卡点击可跳转能耗页
@@ -202,7 +202,7 @@ void screen_dashboard_build(void) {
 
   lv_obj_t * lbl_c = lv_label_create(card_climate);
   lv_label_set_text(lbl_c, "空调 · 客厅 24℃");
-  lv_obj_add_style(lbl_c, sh_style_text_zh(), 0);
+  lv_obj_add_style(lbl_c, sh_style_text_zh_semibold(), 0);
   lv_obj_set_style_text_color(lbl_c, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align_to(lbl_c, c_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
   // 开关
@@ -225,7 +225,7 @@ void screen_dashboard_build(void) {
   lv_obj_center(lbd);
   lv_obj_t * temp = lv_label_create(row_c);
   lv_label_set_text(temp, "24℃");
-  if (sh_get_font_zh()) lv_obj_set_style_text_font(temp, sh_get_font_zh(), 0);
+  lv_obj_add_style(temp, sh_style_text_zh_semibold(), 0);
   lv_obj_set_style_text_color(temp, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_t * btn_c_inc = lv_btn_create(row_c);
   lv_obj_add_style(btn_c_inc, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -258,7 +258,7 @@ void screen_dashboard_build(void) {
 
   lv_obj_t * lbl_s = lv_label_create(card_scene);
   lv_label_set_text(lbl_s, "快捷场景");
-  lv_obj_add_style(lbl_s, sh_style_text_zh(), 0);
+  lv_obj_add_style(lbl_s, sh_style_text_zh_semibold(), 0);
   lv_obj_set_style_text_color(lbl_s, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
   lv_obj_align_to(lbl_s, s_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
   lv_obj_t * row_s = lv_obj_create(card_scene);
@@ -276,7 +276,7 @@ void screen_dashboard_build(void) {
     lv_obj_set_size(b, 64, 36);
     
     lv_obj_t * lb = lv_label_create(b);
-    lv_obj_add_style(lb, sh_style_text_zh(), 0);
+    lv_obj_add_style(lb, sh_style_text_zh_small(), 0);
     lv_label_set_text(lb, qscenes[qi]);
     lv_obj_center(lb);
   }
@@ -294,7 +294,7 @@ void screen_dashboard_build(void) {
     lv_obj_set_size(card, (800 - 24 - 12) / 2, 140);
 
     lv_obj_t * title = lv_label_create(card);
-    if (sh_get_font_zh()) lv_obj_set_style_text_font(title, sh_get_font_zh(), 0);
+    lv_obj_add_style(title, sh_style_text_zh_semibold(), 0);
     lv_obj_set_style_text_color(title, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
     lv_label_set_text(title, titles[i]);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 6);

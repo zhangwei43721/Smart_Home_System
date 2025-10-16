@@ -23,7 +23,7 @@ void screen_climate_build(void) {
 
   lv_obj_t * t = lv_label_create(card);
   lv_label_set_text(t, "客厅温度 24℃ (制冷)");
-  if (sh_get_font_zh()) lv_obj_set_style_text_font(t, sh_get_font_zh(), 0);
+  lv_obj_add_style(t, sh_style_text_zh_semibold(), 0);
   lv_obj_set_style_text_color(t, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
 
   // 温度调节
@@ -39,12 +39,13 @@ void screen_climate_build(void) {
   lv_obj_add_style(btn_dec, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_set_size(btn_dec, 56, 40);
   lv_obj_t * lbnd = lv_label_create(btn_dec);
+  lv_obj_add_style(lbnd, sh_style_text_zh_small(), 0);
   lv_label_set_text(lbnd, "-");
   lv_obj_center(lbnd);
 
   lv_obj_t * temp = lv_label_create(row);
   lv_label_set_text_fmt(temp, "%d℃", target);
-  if (sh_get_font_zh()) lv_obj_set_style_text_font(temp, sh_get_font_zh(), 0);
+  lv_obj_add_style(temp, sh_style_text_zh_semibold(), 0);
   lv_obj_set_style_text_color(temp, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
 
   lv_obj_t * btn_inc = lv_btn_create(row);
@@ -52,6 +53,7 @@ void screen_climate_build(void) {
   lv_obj_add_style(btn_inc, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_set_size(btn_inc, 56, 40);
   lv_obj_t * lbni = lv_label_create(btn_inc);
+  lv_obj_add_style(lbni, sh_style_text_zh_small(), 0);
   lv_label_set_text(lbni, "+");
   lv_obj_center(lbni);
 
