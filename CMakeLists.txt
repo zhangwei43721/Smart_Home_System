@@ -31,7 +31,26 @@ if(CMAKE_CROSSCOMPILING)
     set_target_properties(png_local PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/libpng_ARM/libpng16.a" 
     )
-    set(PLATFORM_LIBS pthread freetype_local png_local m)
+     # --- OpenSSL 库 (Mosquitto 的依赖) ---
+    # 定义 libcrypto
+    add_library(crypto_local STATIC IMPORTED GLOBAL)
+    set_target_properties(crypto_local PROPERTIES
+        # 路径必须指向您为 ARM 编译的 libcrypto.a 文件
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/libcrypto.a"
+    )
+    # 定义 libssl
+    add_library(ssl_local STATIC IMPORTED GLOBAL)
+    set_target_properties(ssl_local PROPERTIES
+        # 路径必须指向您为 ARM 编译的 libssl.a 文件
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/libssl.a"
+    )
+
+    # --- Mosquitto 库 ---
+    add_library(mosquitto_local STATIC IMPORTED GLOBAL)
+    set_target_properties(mosquitto_local PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/mosquitto/lib/libmosquitto.a"
+    )
+    set(PLATFORM_LIBS  mosquitto_local ssl_local crypto_local pthread freetype_local png_local m)
 
 elseif(WIN32)
     # Windows 平台
@@ -94,6 +113,7 @@ include_directories(
     lvgl
     lv_drivers
     libs/cJSON
+    libs/mosquitto/include
 )
 
 # --- 源文件 ---
