@@ -32,23 +32,23 @@ static lv_timer_t * g_time_timer = NULL;
 static void ensure_font_loaded(void) {
   if (!g_font_zh_common) {
     static lv_ft_info_t info24;
-    info24.name = "./MiSans.ttf";
-    info24.weight = 24;
+    info24.name = "./media/MiSans-Regular.ttf";
+    info24.weight = 22;
     info24.style = FT_FONT_STYLE_NORMAL;
     info24.mem = NULL;
     if (lv_ft_font_init(&info24)) g_font_zh_common = info24.font;
   }
   if (!g_font_zh_large) {
     static lv_ft_info_t info48;
-    info48.name = "./MiSans.ttf";
-    info48.weight = 48;
+    info48.name = "./media/MiSans-Semibold.ttf";
+    info48.weight = 36;
     info48.style = FT_FONT_STYLE_NORMAL;
     info48.mem = NULL;
     if (lv_ft_font_init(&info48)) g_font_zh_large = info48.font;
   }
   if (!g_font_zh_small) {
     static lv_ft_info_t info18;
-    info18.name = "./MiSans.ttf";
+    info18.name = "./media/MiSans-Regular.ttf";
     info18.weight = 18;
     info18.style = FT_FONT_STYLE_NORMAL;
     info18.mem = NULL;

@@ -27,7 +27,11 @@ if(CMAKE_CROSSCOMPILING)
     set_target_properties(freetype_local PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/freetype/lib/arm/libfreetype.a"
     )
-    set(PLATFORM_LIBS pthread freetype_local m)
+    add_library(png_local STATIC IMPORTED GLOBAL)
+    set_target_properties(png_local PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/libpng_ARM/libpng16.a" 
+    )
+    set(PLATFORM_LIBS pthread freetype_local png_local m)
 
 elseif(WIN32)
     # Windows 平台
@@ -49,7 +53,9 @@ elseif(UNIX AND NOT APPLE)
     find_package(SDL2 REQUIRED)
     find_package(Threads REQUIRED)
     find_package(Freetype REQUIRED)
-    set(PLATFORM_LIBS SDL2::SDL2 Threads::Threads Freetype::Freetype m)
+    find_package(PNG REQUIRED)
+    find_package(ZLIB REQUIRED)
+    set(PLATFORM_LIBS SDL2::SDL2 Threads::Threads Freetype::Freetype PNG::PNG ZLIB::ZLIB m)
 else()
     message(FATAL_ERROR "不支持的平台或操作系统！")
 endif()

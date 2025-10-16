@@ -9,6 +9,7 @@
 #define _DEFAULT_SOURCE /* needed for usleep() */
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
 // 驱动配置文件
 #include "lv_drv_conf.h"
@@ -16,6 +17,12 @@
 // LVGL 核心库
 #include "lvgl/lvgl.h"
 
+/* LVGL 日志回调函数 */
+static void my_log_cb(const char * buf)
+{
+  printf("%s", buf);
+  fflush(stdout);
+}
 
 // 根据 lv_drv_conf.h 中的 USE_SDL 宏来包含不同的平台驱动头文件
 #if USE_SDL
@@ -52,9 +59,16 @@ int main(int argc, char **argv)
 
     /* 初始化 LVGL */
     lv_init();
+    // 注册日志回调函数
+    lv_log_register_print_cb(my_log_cb);
+
+    lv_fs_posix_init();
 
     /* 初始化 HAL (显示, 输入设备, tick) */
     hal_init();
+    
+    /* PNG 图片解码初始化 */
+    lv_png_init();
 
     // 智能家居：加载概览屏
     demo_dashboard();

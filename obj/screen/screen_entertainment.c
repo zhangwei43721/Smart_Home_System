@@ -79,6 +79,7 @@ typedef struct {
   lv_obj_t* img;
   const char* path;
 } ImgItemCtx;
+// ===================== 终极调试函数 =====================
 static void on_image_item_clicked(lv_event_t* e) {
   ImgItemCtx* ctx = (ImgItemCtx*)lv_event_get_user_data(e);
   if (ctx && ctx->img && ctx->path) {
@@ -123,6 +124,7 @@ void screen_entertainment_images(void) {
   // 右：预览
   lv_obj_t* right = lv_obj_create(card);
   lv_obj_remove_style_all(right);
+  lv_obj_set_height(right, LV_PCT(100));
   lv_obj_set_flex_grow(right, 1);
   lv_obj_set_style_bg_color(right, lv_color_white(), 0);
   lv_obj_set_style_bg_opa(right, LV_OPA_COVER, 0);
@@ -158,10 +160,11 @@ void screen_entertainment_images(void) {
       ImgItemCtx* ictx = (ImgItemCtx*)malloc(sizeof(ImgItemCtx));
       if (ictx) {
         ictx->img = img;
-        size_t plen = strlen("A:/media/") + strlen(de->d_name) + 1;
+        const char* prefix = "A:./media/";
+        size_t plen = strlen(prefix) + strlen(de->d_name) + 1;
         char* full = (char*)malloc(plen);
         if (full) {
-          snprintf(full, plen, "A:/media/%s", de->d_name);
+          snprintf(full, plen, "%s%s", prefix, de->d_name);
         }
         ictx->path = full ? full : strdup(de->d_name);
       }
@@ -297,6 +300,7 @@ void screen_entertainment_music(void) {
   // 右侧：播放控制
   lv_obj_t* right = lv_obj_create(card);
   lv_obj_remove_style_all(right);
+  lv_obj_set_height(right, LV_PCT(100));
   lv_obj_set_flex_grow(right, 1);
   lv_obj_set_style_pad_all(right, 12, 0);
   lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);
@@ -393,7 +397,7 @@ const char* fifo_path = "/tmp/pipe";
 
 // 向管道发送命令
 static void send_mplayer_cmd(const char* cmd) {
-  int fd = open(fifo_path, O_WRONLY);
+  int fd = open(fifo_path, O_WRONLY | O_NONBLOCK);
   if (fd >= 0) {
     write(fd, cmd, strlen(cmd));
     close(fd);
@@ -412,9 +416,9 @@ static void play_video_at_index(int index) {
 
   // 启动mplayer
   char cmd[1024];
-  // 注意：坐标(0:48)和尺寸(-x 770 -y 240)需要根据你的UI布局微调
+  // 注意：坐标(0:48)和尺寸(-x 450 -y 240)需要根据你的UI布局微调
   snprintf(cmd, sizeof(cmd),
-           "mplayer -slave -quiet -input file=%s -geometry 0:48 -zoom -x 770 "
+           "./mplayer -slave -quiet -input file=%s -geometry 0:48 -zoom -x 450 "
            "-y 240 ./media/%s &",
            fifo_path, g_video_files[index]);
   system(cmd);
@@ -458,7 +462,8 @@ static void on_video_stop(lv_event_t* e) {
 // 视频页返回
 static void on_video_back(lv_event_t* e) {
   LV_UNUSED(e);
-  on_video_stop(NULL);
+  on_video_stop(NULL);           // 尝试优雅退出
+  system("killall -9 mplayer");  // 强制清理，以防万一
   free_file_list(g_video_files, g_video_count);
   g_video_files = NULL;
   g_video_count = 0;
@@ -499,6 +504,7 @@ void screen_entertainment_video(void) {
   // 右侧：视频播放区域和控制
   lv_obj_t* right = lv_obj_create(card);
   lv_obj_remove_style_all(right);
+  lv_obj_set_height(right, LV_PCT(100));
   lv_obj_set_flex_grow(right, 1);
   lv_obj_set_style_pad_all(right, 12, 0);
   lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);
