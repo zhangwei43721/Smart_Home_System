@@ -31,17 +31,15 @@ if(CMAKE_CROSSCOMPILING)
     set_target_properties(png_local PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/libpng_ARM/libpng16.a" 
     )
-     # --- OpenSSL 库 (Mosquitto 的依赖) ---
+    # --- OpenSSL 库 ---
     # 定义 libcrypto
     add_library(crypto_local STATIC IMPORTED GLOBAL)
     set_target_properties(crypto_local PROPERTIES
-        # 路径必须指向您为 ARM 编译的 libcrypto.a 文件
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/libcrypto.a"
     )
     # 定义 libssl
     add_library(ssl_local STATIC IMPORTED GLOBAL)
     set_target_properties(ssl_local PROPERTIES
-        # 路径必须指向您为 ARM 编译的 libssl.a 文件
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/libssl.a"
     )
 
@@ -153,10 +151,8 @@ file(GLOB_RECURSE ALL_SOURCES
 list(FILTER ALL_SOURCES EXCLUDE REGEX ".*/obj/.*/[^/]*-[^/]*\\.c$")
 # 排除 AI 示例代码，不参与主程序编译
 list(FILTER ALL_SOURCES EXCLUDE REGEX ".*/obj/AI/examples/.*\\.c$")
+
 # --- 构建主程序 ---
-# 明确加入新屏文件，避免 GLOB 未更新时丢失
-
-
 add_executable(${PROJECT_NAME} main.c  ${ALL_SOURCES})
 
 if(TARGET_PLATFORM STREQUAL "pc")

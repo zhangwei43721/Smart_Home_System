@@ -18,6 +18,9 @@ static bool g_ai_inited = false;
 static lv_obj_t* g_btn_send = NULL;
 static lv_obj_t* g_actions_row = NULL;
 static lv_obj_t* g_back_btn = NULL;
+static lv_obj_t* g_cont = NULL;
+static lv_obj_t* g_card_msgs = NULL;
+static lv_obj_t* g_kb = NULL;
 
 // 导航返回到首页（恢复底栏）
 extern void demo_dashboard(void);
@@ -158,6 +161,47 @@ static void on_send(lv_event_t* e) {
   pthread_detach(tid);
 }
 
+static void hide_keyboard(void);
+static void on_keyboard_event(lv_event_t* e) {
+  lv_event_code_t code = lv_event_get_code(e);
+  if (code == LV_EVENT_READY || code == LV_EVENT_CANCEL) {
+    hide_keyboard();
+  }
+}
+
+static void show_keyboard(void) {
+  if (g_kb) return;
+  lv_obj_t* scr = lv_scr_act();
+  g_kb = lv_keyboard_create(scr);
+  lv_obj_set_width(g_kb, 800 - 12);
+  lv_obj_set_height(g_kb, 180);
+  lv_obj_align(g_kb, LV_ALIGN_BOTTOM_MID, 0, -6);
+  lv_keyboard_set_textarea(g_kb, g_input);
+  lv_obj_add_event_cb(g_kb, on_keyboard_event, LV_EVENT_ALL, NULL);
+  if (g_cont) {
+    lv_obj_set_height(g_cont, 480 - 48 - 180);
+  }
+}
+
+static void hide_keyboard(void) {
+  if (!g_kb) return;
+  lv_obj_del(g_kb);
+  g_kb = NULL;
+  if (g_cont) {
+    lv_obj_set_height(g_cont, 480 - 48);
+  }
+}
+
+static void on_ta_focus(lv_event_t* e) {
+  LV_UNUSED(e);
+  show_keyboard();
+}
+
+static void on_ta_defocus(lv_event_t* e) {
+  LV_UNUSED(e);
+  hide_keyboard();
+}
+
 void screen_ai_chat_build(void) {
   lv_obj_t* scr = lv_scr_act();
   lv_obj_clean(scr);
@@ -178,6 +222,7 @@ void screen_ai_chat_build(void) {
   lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_style_pad_row(cont, 12, 0);
   lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+  g_cont = cont;
 
   g_actions_row = lv_obj_create(cont);
   lv_obj_remove_style_all(g_actions_row);
@@ -190,7 +235,7 @@ void screen_ai_chat_build(void) {
   g_back_btn = lv_btn_create(g_actions_row);
   lv_obj_add_style(g_back_btn, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(g_back_btn, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
-  lv_obj_set_size(g_back_btn, 72, 32);
+  lv_obj_set_size(g_back_btn, 72, 30);
   lv_obj_add_event_cb(g_back_btn, on_go_back, LV_EVENT_CLICKED, NULL);
   {
     lv_obj_t* l = lv_label_create(g_back_btn);
@@ -203,11 +248,13 @@ void screen_ai_chat_build(void) {
   lv_obj_t* btn_new = lv_btn_create(g_actions_row);
   lv_obj_add_style(btn_new, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(btn_new, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  lv_obj_set_size(btn_new, 80, 30);
   lv_obj_add_event_cb(btn_new, on_new_chat, LV_EVENT_CLICKED, NULL);
   {
     lv_obj_t* l = lv_label_create(btn_new);
     lv_obj_add_style(l, sh_style_text_zh_semibold(), 0);
     lv_label_set_text(l, "新对话");
+    lv_obj_center(l);
   }
 
   lv_obj_t* card_msgs = lv_obj_create(cont);
@@ -221,6 +268,7 @@ void screen_ai_chat_build(void) {
   // 只允许聊天区滚动，其他容器禁止滚动
   lv_obj_clear_flag(card_msgs, LV_OBJ_FLAG_SCROLL_CHAIN);
   g_msg_cont = card_msgs;
+  g_card_msgs = card_msgs;
   if (!chat_head || list_empty(&chat_head->list)) {
     data_chat_add("assistant", "你好，我是你的智能家居助手\n可以帮你控制灯光、空调，或查询家中环境\n");
   }
@@ -238,6 +286,8 @@ void screen_ai_chat_build(void) {
   lv_obj_set_height(ta, LV_PCT(100));
   lv_textarea_set_one_line(ta, true);
   lv_obj_add_style(ta, sh_style_text_zh(), 0);
+  lv_obj_add_event_cb(ta, on_ta_focus, LV_EVENT_FOCUSED, NULL);
+  lv_obj_add_event_cb(ta, on_ta_defocus, LV_EVENT_DEFOCUSED, NULL);
   g_input = ta;
 
   lv_obj_t* btn = lv_btn_create(input_row);
