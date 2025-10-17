@@ -1,6 +1,7 @@
 #include "obj/Include/screen_security.h"
 #include "obj/Include/screens_common.h"
 #include "obj/data/state_store.h"
+#include "obj/Include/Hardware.h"
 
 typedef enum {
   SEC_DISARMED = 0,
@@ -13,6 +14,12 @@ static sec_state_t g_sec_state = SEC_DISARMED;
 static lv_obj_t * g_btn_disarm = NULL;
 static lv_obj_t * g_btn_arm_away = NULL;
 static lv_obj_t * g_btn_arm_home = NULL;
+static lv_obj_t * g_btn_alarm_now = NULL;
+static lv_obj_t * g_lbl_alarm_now = NULL;
+static int g_alarm_updating = 0; // 防止程序设置状态时触发递归
+
+// 前置声明，避免隐式声明导致的静态冲突
+static void sec_update_alarm_now(int on);
 
 static void sec_update_buttons(void) {
   if (!g_btn_disarm || !g_btn_arm_away || !g_btn_arm_home) return;
@@ -24,9 +31,45 @@ static void sec_update_buttons(void) {
   else lv_obj_add_state(g_btn_arm_home, LV_STATE_CHECKED);
 }
 
+void security_set_alarm_active(int on) {
+  control_buzzer(on ? 1 : 0);
+  ss_alarm_save(on ? 1 : 0);
+  g_alarm_updating = 1;
+  sec_update_alarm_now(on ? 1 : 0);
+  g_alarm_updating = 0;
+}
+
 static void on_disarm(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_DISARMED; ss_security_save((int)g_sec_state); sec_update_buttons(); }
 static void on_arm_away(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_AWAY; ss_security_save((int)g_sec_state); sec_update_buttons(); }
 static void on_arm_home(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_HOME; ss_security_save((int)g_sec_state); sec_update_buttons(); }
+
+static void on_alarm_now_changed(lv_event_t *e) {
+  if (g_alarm_updating) return;
+  lv_obj_t *btn = lv_event_get_target(e);
+  int on = lv_obj_has_state(btn, LV_STATE_CHECKED) ? 1 : 0;
+  security_set_alarm_active(on);
+}
+
+static void sec_update_alarm_now(int on) {
+  if (!g_btn_alarm_now) return;
+  if (on) {
+    lv_obj_add_state(g_btn_alarm_now, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(g_btn_alarm_now, lv_palette_main(LV_PALETTE_RED), LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(g_btn_alarm_now, LV_OPA_COVER, LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(g_btn_alarm_now, lv_palette_main(LV_PALETTE_RED), LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(g_btn_alarm_now, 18, LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_ofs_y(g_btn_alarm_now, 8, LV_STATE_CHECKED);
+    lv_obj_set_style_border_color(g_btn_alarm_now, lv_palette_main(LV_PALETTE_RED), LV_STATE_CHECKED);
+    lv_obj_set_style_border_width(g_btn_alarm_now, 2, LV_STATE_CHECKED);
+    // 按下时稍微加深，符合 Material 的按压反馈
+    lv_obj_set_style_bg_color(g_btn_alarm_now, lv_palette_darken(LV_PALETTE_RED, 1), LV_STATE_CHECKED | LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_ofs_y(g_btn_alarm_now, 10, LV_STATE_CHECKED | LV_STATE_PRESSED);
+    if (g_lbl_alarm_now) lv_obj_set_style_text_color(g_lbl_alarm_now, lv_color_white(), 0);
+  } else {
+    lv_obj_clear_state(g_btn_alarm_now, LV_STATE_CHECKED);
+    if (g_lbl_alarm_now) lv_obj_set_style_text_color(g_lbl_alarm_now, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
+  }
+}
 
 // ========== 详情弹窗 ==========
 typedef struct { int sensor_index; lv_obj_t *mask; } SecDlgCtx;
@@ -105,6 +148,7 @@ static void on_detail_clicked(lv_event_t *e) {
 void screen_security_build(void) {
   sh_init_styles_once();
   g_sec_state = (sec_state_t)ss_security_load();
+  int alarm_on_initial = ss_alarm_load();
 
   lv_obj_t * scr = lv_scr_act();
 
@@ -147,6 +191,18 @@ void screen_security_build(void) {
   lv_obj_add_style(g_btn_arm_home, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_add_event_cb(g_btn_arm_home, on_arm_home, LV_EVENT_CLICKED, NULL);
   lv_obj_t * lbl2 = lv_label_create(g_btn_arm_home); lv_label_set_text(lbl2, "在家布防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl2, sh_get_font_zh(), 0); lv_obj_center(lbl2);
+
+  // 新增：立即报警按钮（位于在家布防右侧）
+  g_btn_alarm_now = lv_btn_create(row_ctrl);
+  lv_obj_set_size(g_btn_alarm_now, 120, 40);
+  lv_obj_add_style(g_btn_alarm_now, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(g_btn_alarm_now, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
+  // 允许被置为 CHECKED，以便保持激活态样式
+  lv_obj_add_flag(g_btn_alarm_now, LV_OBJ_FLAG_CHECKABLE);
+  lv_obj_add_event_cb(g_btn_alarm_now, on_alarm_now_changed, LV_EVENT_VALUE_CHANGED, NULL);
+  g_lbl_alarm_now = lv_label_create(g_btn_alarm_now); lv_label_set_text(g_lbl_alarm_now, "立即报警"); if (sh_get_font_zh()) lv_obj_set_style_text_font(g_lbl_alarm_now, sh_get_font_zh(), 0); lv_obj_center(g_lbl_alarm_now);
+  // 根据持久化状态恢复按钮与蜂鸣器
+  security_set_alarm_active(alarm_on_initial ? 1 : 0);
 
   sec_update_buttons();
 

@@ -8,6 +8,8 @@
 
 #include "../Include/config.h"
 #include "libs/cJSON/cJSON.h"
+#include "../Include/screen_lighting.h"
+#include "../Include/screen_security.h"
 
 // --- 静态全局变量 ---
 static struct mosquitto* g_mosq = NULL;
@@ -82,7 +84,8 @@ static void on_message(struct mosquitto* mosq, void* obj,
       int on = (strcmp(state, "ON") == 0);
 
       printf("  -> 动作: 控制 LED%d -> %s\n", led_num, state);
-      control_led(led_num, on);
+      // 使用照明页面的入口以保持 UI/持久化/硬件 同步
+      lighting_set_from_mqtt(led_num, on);
     } else {
       fprintf(stderr, "MQTT 错误: 灯光控制JSON格式不正确。\n");
     }
@@ -103,7 +106,8 @@ static void on_message(struct mosquitto* mosq, void* obj,
       int on = (strcmp(state, "ON") == 0);
 
       printf("  -> 动作: 控制蜂鸣器 -> %s\n", state);
-      control_buzzer(on);
+      // 调用安防入口以同步 UI 高亮与硬件
+      security_set_alarm_active(on);
     } else {
       fprintf(stderr, "MQTT 错误: 报警器控制JSON格式不正确。\n");
     }

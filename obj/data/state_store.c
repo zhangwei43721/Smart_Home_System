@@ -9,6 +9,7 @@
 #define DATA_DIR "data"
 #define LIGHTING_STATE_PATH DATA_DIR "/lighting_state.txt"
 #define SECURITY_STATE_PATH DATA_DIR "/security_state.txt"
+#define ALARM_STATE_PATH    DATA_DIR "/alarm_state.txt"
 
 static void ensure_data_dir(void) {
     struct stat st;
@@ -26,6 +27,33 @@ static void ensure_data_dir(void) {
     } else {
         printf("[state_store] created directory: %s\n", DATA_DIR);
     }
+}
+
+int ss_alarm_load(void) {
+    ensure_data_dir();
+    FILE *fp = fopen(ALARM_STATE_PATH, "r");
+    if (!fp) {
+        printf("[state_store] alarm file not found, creating default -> %s\n", ALARM_STATE_PATH);
+        ss_alarm_save(0);
+        return 0;
+    }
+    printf("[state_store] loading alarm from %s\n", ALARM_STATE_PATH);
+    int on = 0;
+    if (fscanf(fp, "%d", &on) != 1) on = 0;
+    fclose(fp);
+    return on ? 1 : 0;
+}
+
+void ss_alarm_save(int on) {
+    ensure_data_dir();
+    FILE *fp = fopen(ALARM_STATE_PATH, "w");
+    if (!fp) {
+        fprintf(stderr, "[state_store] failed to open %s for write: %s\n", ALARM_STATE_PATH, strerror(errno));
+        return;
+    }
+    printf("[state_store] saving alarm to %s\n", ALARM_STATE_PATH);
+    fprintf(fp, "%d\n", on ? 1 : 0);
+    fclose(fp);
 }
 
 static int read_ints_from_line(const char *line, int *a, int *b, int *c) {

@@ -108,6 +108,7 @@ int control_led(int led_num, int on) {
   return 0;
 }
 
+
 /**
  * @brief 控制蜂鸣器的状态。
  */
@@ -116,9 +117,21 @@ int control_buzzer(int on) {
 
   long state = on ? BUZZER_STATE_ON : BUZZER_STATE_OFF;
 
-  if (ioctl(g_buzzer_fd, state, 1) < 0) {
-    perror("ioctl failed for Buzzer");
-    return -1;
+  if (on) {
+    // 隔0.3秒响一次
+    for (int i = 0; i < 2; i++) {
+      if (ioctl(g_buzzer_fd, state, 1) < 0) {
+        perror("ioctl failed for Buzzer");
+        return -1;
+      }
+      usleep(300000);
+    }
+  } else {
+    if (ioctl(g_buzzer_fd, state, 1) < 0) {
+      perror("ioctl failed for Buzzer");
+      return -1;
+    }
   }
+
   return 0;
 }

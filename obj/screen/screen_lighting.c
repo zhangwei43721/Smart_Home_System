@@ -1,6 +1,7 @@
 #include "obj/Include/screen_lighting.h"
 #include "obj/Include/screens_common.h"
 #include "obj/data/state_store.h"
+#include "obj/Include/Hardware.h"
 
 // --- 全局静态数据 ---
 // 使用新的数据结构初始化所有灯光设备，作为本页面的“数据模型”
@@ -38,6 +39,18 @@ static void on_dialog_bri_changed(lv_event_t *e) {
     lv_obj_t *slider = lv_event_get_target(e);
     g_lights[ctx->light_index].brightness = lv_slider_get_value(slider);
     update_card_ui(&g_lights[ctx->light_index]); // 实时更新卡片上的状态文字
+    persist_lights();
+}
+
+// 外部(MQTT/硬件反馈)驱动的状态同步入口
+void lighting_set_from_mqtt(int led_index_1_based, int on) {
+    int idx = led_index_1_based - 1; // 转为0-based
+    if (idx < 0 || idx >= LIGHT_COUNT) return;
+    g_lights[idx].is_on = on ? 1 : 0;
+    update_card_ui(&g_lights[idx]);
+    if (idx >= 0 && idx < 4) {
+        control_led(led_index_1_based, on ? 1 : 0);
+    }
     persist_lights();
 }
 
@@ -153,6 +166,10 @@ static void on_switch_toggle(lv_event_t *e) {
     
     // 让UI更新函数去根据新的数据处理界面变化
     update_card_ui(&g_lights[idx]);
+    // 硬件联动：仅前4个灯映射硬件LED1..LED4
+    if (idx >= 0 && idx < 4) {
+        control_led((int)idx + 1, g_lights[idx].is_on ? 1 : 0);
+    }
     persist_lights();
 }
 
@@ -283,5 +300,10 @@ void screen_lighting_build(void) {
 
         // 5. 初始化UI显示
         update_card_ui(&g_lights[i]);
+    }
+
+    // 初始硬件同步：前4个灯与当前状态一致
+    for (int i = 0; i < 4 && i < LIGHT_COUNT; ++i) {
+        control_led(i + 1, g_lights[i].is_on ? 1 : 0);
     }
 }

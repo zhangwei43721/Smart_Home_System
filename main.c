@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "obj/Include/mqtt.h"
 #include "obj/Include/Hardware.h"
+#include "obj/data/state_store.h"
 
 // 驱动配置文件
 #include "lv_drv_conf.h"
@@ -60,6 +61,7 @@ static void sync_time_on_startup(void)
  **********************/
 static void hal_init(void);
 static void sync_time_on_startup(void);
+static void restore_persisted_states(void);
 
 
 /**********************
@@ -89,6 +91,9 @@ int main(int argc, char **argv)
 
     /* 硬件设备初始化 */
     hardware_init();
+
+    /* 程序启动：恢复上次灯光与报警的硬件状态 */
+    restore_persisted_states();
 
     /* 启动 MQTT 后台客户端 */
     mqtt_client_start();
@@ -195,6 +200,26 @@ static void hal_init(void)
     lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv_1);
 
 #endif
+}
+
+static void restore_persisted_states(void)
+{
+    /* 恢复报警（蜂鸣器）状态 */
+    int alarm_on = 0;
+    alarm_on = ss_alarm_load();
+    control_buzzer(alarm_on ? 1 : 0);
+
+    /* 恢复灯光状态（仅前4个灯映射到LED1..4）*/
+    LightPersist arr[8];
+    for (int i = 0; i < 8; ++i) {
+        arr[i].is_on = 0;
+        arr[i].brightness = 0;
+        arr[i].color_temp = 0;
+    }
+    ss_lighting_load(arr, 8);
+    for (int i = 0; i < 4; ++i) {
+        control_led(i + 1, arr[i].is_on ? 1 : 0);
+    }
 }
 
 #if !USE_SDL

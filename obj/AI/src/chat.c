@@ -47,6 +47,9 @@ char* openai_chat_with_history(ChatNode* history_head, const char* model) {
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&chunk);
 
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
   CURLcode res = curl_easy_perform(curl);
   if (res != CURLE_OK)
     fprintf(stderr, "curl_easy_perform() failed: %s\n",

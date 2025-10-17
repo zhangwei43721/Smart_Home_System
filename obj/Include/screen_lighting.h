@@ -26,6 +26,9 @@ typedef struct {
  */
 void screen_lighting_build(void);
 
+// 通过外部事件（如MQTT/硬件反馈）设置指定灯的开关状态（1-based: 1..4映射LED1..LED4）
+void lighting_set_from_mqtt(int led_index_1_based, int on);
+
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif
