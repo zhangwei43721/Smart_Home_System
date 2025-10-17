@@ -5,6 +5,7 @@
 #include "obj/Include/screen_security.h"
 #include "obj/Include/screen_energy.h"
 #include "obj/Include/screen_entertainment.h"
+#include "obj/Include/screen_ai_chat.h"
 
 // 仅在本文件保留底栏相关样式
 static lv_style_t style_nav_text;
@@ -44,6 +45,7 @@ static void on_nav_to_lighting(lv_event_t * e);
 static void on_nav_to_security(lv_event_t * e);
 static void on_nav_to_energy(lv_event_t * e);
 static void on_nav_to_entertainment(lv_event_t * e);
+static void on_nav_to_ai(lv_event_t * e);
 
 // 创建底部导航栏（三个 Tab：概览/照明/安防）
 static void create_bottom_nav(const char *active) {
@@ -115,6 +117,20 @@ static void create_bottom_nav(const char *active) {
   lv_obj_add_style(lbl_ent, &style_nav_text, 0);
   lv_obj_center(lbl_ent);
 
+  // AI 按钮
+  lv_obj_t * btn_ai = lv_btn_create(nav);
+  lv_obj_set_size(btn_ai, 120, 40);
+  lv_obj_add_style(btn_ai, &style_nav_btn, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_add_style(btn_ai, &style_nav_btn_checked, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_add_event_cb(btn_ai, on_nav_to_ai, LV_EVENT_CLICKED, NULL);
+  if (active && strcmp(active, "ai")==0) {
+    lv_obj_add_state(btn_ai, LV_STATE_CHECKED);
+  }
+  lv_obj_t * lbl_ai = lv_label_create(btn_ai);
+  lv_label_set_text(lbl_ai, "AI");
+  lv_obj_add_style(lbl_ai, &style_nav_text, 0);
+  lv_obj_center(lbl_ai);
+
   LV_UNUSED(active);
 }
 
@@ -185,6 +201,14 @@ static void on_nav_to_entertainment(lv_event_t * e) {
   create_bottom_nav("entertainment");
 }
 
+// 事件：切到 AI 对话
+static void on_nav_to_ai(lv_event_t * e) {
+  LV_UNUSED(e);
+  clear_screen();
+  init_styles_once();
+  screen_ai_chat_build();
+}
+
 
 // 对外导出：加载概览屏
 void demo_dashboard(void) {
@@ -209,4 +233,9 @@ void demo_energy(void) {
 // 对外导出：加载娱乐屏
 void demo_entertainment(void) {
   on_nav_to_entertainment(NULL);
+}
+
+// 对外导出：加载 AI 对话屏
+void demo_ai_chat(void) {
+  on_nav_to_ai(NULL);
 }
