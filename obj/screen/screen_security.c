@@ -1,5 +1,6 @@
 #include "obj/Include/screen_security.h"
 #include "obj/Include/screens_common.h"
+#include "obj/data/state_store.h"
 
 typedef enum {
   SEC_DISARMED = 0,
@@ -23,9 +24,9 @@ static void sec_update_buttons(void) {
   else lv_obj_add_state(g_btn_arm_home, LV_STATE_CHECKED);
 }
 
-static void on_disarm(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_DISARMED; sec_update_buttons(); }
-static void on_arm_away(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_AWAY; sec_update_buttons(); }
-static void on_arm_home(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_HOME; sec_update_buttons(); }
+static void on_disarm(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_DISARMED; ss_security_save((int)g_sec_state); sec_update_buttons(); }
+static void on_arm_away(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_AWAY; ss_security_save((int)g_sec_state); sec_update_buttons(); }
+static void on_arm_home(lv_event_t *e) { LV_UNUSED(e); g_sec_state = SEC_ARMED_HOME; ss_security_save((int)g_sec_state); sec_update_buttons(); }
 
 // ========== 详情弹窗 ==========
 typedef struct { int sensor_index; lv_obj_t *mask; } SecDlgCtx;
@@ -103,6 +104,7 @@ static void on_detail_clicked(lv_event_t *e) {
 
 void screen_security_build(void) {
   sh_init_styles_once();
+  g_sec_state = (sec_state_t)ss_security_load();
 
   lv_obj_t * scr = lv_scr_act();
 

@@ -1,18 +1,19 @@
 #include "obj/Include/screen_lighting.h"
 #include "obj/Include/screens_common.h"
+#include "obj/data/state_store.h"
 
 // --- 全局静态数据 ---
 // 使用新的数据结构初始化所有灯光设备，作为本页面的“数据模型”
 #define LIGHT_COUNT 8
 static LightDevice g_lights[LIGHT_COUNT] = {
-    {.name = "客厅主灯",   .is_on = true,  .supports_adjust = true, .brightness = 80, .color_temp = 4000},
-    {.name = "餐厅吊灯",   .is_on = false, .supports_adjust = true, .brightness = 70, .color_temp = 3500},
-    {.name = "卧室筒灯",   .is_on = true,  .supports_adjust = true, .brightness = 60, .color_temp = 3000},
-    {.name = "走廊灯",     .is_on = false, .supports_adjust = false}, // 不支持调节的灯
-    {.name = "书房台灯",   .is_on = false, .supports_adjust = true, .brightness = 90, .color_temp = 4500},
-    {.name = "阳台灯",     .is_on = false, .supports_adjust = false},
-    {.name = "卫生间灯",   .is_on = false, .supports_adjust = false},
-    {.name = "厨房灯",     .is_on = false, .supports_adjust = false},
+    {.name = "客厅主灯",   .supports_adjust = true},
+    {.name = "餐厅吊灯",   .supports_adjust = true},
+    {.name = "卧室筒灯",   .supports_adjust = true},
+    {.name = "走廊灯",     .supports_adjust = false}, // 不支持调节的灯
+    {.name = "书房台灯",   .supports_adjust = true},
+    {.name = "阳台灯",     .supports_adjust = false},
+    {.name = "卫生间灯",   .supports_adjust = false},
+    {.name = "厨房灯",     .supports_adjust = false},
 };
 
 // 用于向调节弹窗传递数据的上下文结构体
@@ -24,6 +25,7 @@ typedef struct {
 
 // --- 前向声明静态函数 ---
 static void update_card_ui(LightDevice* light);
+static void persist_lights(void);
 
 
 /* ===============================
@@ -36,6 +38,7 @@ static void on_dialog_bri_changed(lv_event_t *e) {
     lv_obj_t *slider = lv_event_get_target(e);
     g_lights[ctx->light_index].brightness = lv_slider_get_value(slider);
     update_card_ui(&g_lights[ctx->light_index]); // 实时更新卡片上的状态文字
+    persist_lights();
 }
 
 // 弹窗上的色温滑块值改变时调用
@@ -44,6 +47,7 @@ static void on_dialog_ct_changed(lv_event_t *e) {
     lv_obj_t *slider = lv_event_get_target(e);
     g_lights[ctx->light_index].color_temp = lv_slider_get_value(slider);
     update_card_ui(&g_lights[ctx->light_index]);
+    persist_lights();
 }
 
 // 关闭弹窗的事件 (给蒙层和完成按钮使用)
@@ -149,6 +153,7 @@ static void on_switch_toggle(lv_event_t *e) {
     
     // 让UI更新函数去根据新的数据处理界面变化
     update_card_ui(&g_lights[idx]);
+    persist_lights();
 }
 
 
@@ -187,9 +192,39 @@ static void update_card_ui(LightDevice* light) {
     }
 }
 
+static void persist_lights(void) {
+    LightPersist arr[LIGHT_COUNT];
+    for (int i = 0; i < LIGHT_COUNT; ++i) {
+        arr[i].is_on = g_lights[i].is_on ? 1 : 0;
+        arr[i].brightness = g_lights[i].brightness;
+        arr[i].color_temp = g_lights[i].color_temp;
+    }
+    ss_lighting_save(arr, LIGHT_COUNT);
+}
+
 // 构建整个照明页面的函数
 void screen_lighting_build(void) {
     sh_init_styles_once();
+    {
+        LightPersist arr[LIGHT_COUNT];
+        for (int i = 0; i < LIGHT_COUNT; ++i) {
+            arr[i].is_on = 0; // 默认关闭
+            // 可调灯给出合理默认亮度/色温，不可调灯为 0
+            if (g_lights[i].supports_adjust) {
+                arr[i].brightness = 70;
+                arr[i].color_temp = 3500;
+            } else {
+                arr[i].brightness = 0;
+                arr[i].color_temp = 0;
+            }
+        }
+        ss_lighting_load(arr, LIGHT_COUNT);
+        for (int i = 0; i < LIGHT_COUNT; ++i) {
+            g_lights[i].is_on = arr[i].is_on ? 1 : 0;
+            g_lights[i].brightness = arr[i].brightness;
+            g_lights[i].color_temp = arr[i].color_temp;
+        }
+    }
 
     lv_obj_t * scr = lv_scr_act();
     lv_obj_t * cont = lv_obj_create(scr);
