@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "obj/Include/mqtt.h"
+#include "obj/Include/Hardware.h"
 
 // 驱动配置文件
 #include "lv_drv_conf.h"
@@ -84,6 +86,12 @@ int main(int argc, char **argv)
     
     /* PNG 图片解码初始化 */
     lv_png_init();
+
+    /* 硬件设备初始化 */
+    hardware_init();
+
+    /* 启动 MQTT 后台客户端 */
+    mqtt_client_start();
 
     // 智能家居：加载概览屏
     demo_dashboard();

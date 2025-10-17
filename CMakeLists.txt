@@ -50,7 +50,7 @@ if(CMAKE_CROSSCOMPILING)
     set_target_properties(mosquitto_local PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/mosquitto/lib/libmosquitto.a"
     )
-    set(PLATFORM_LIBS  mosquitto_local ssl_local crypto_local pthread freetype_local png_local m)
+    set(PLATFORM_LIBS  mosquitto_local ssl_local crypto_local pthread dl freetype_local png_local m)
 
 elseif(WIN32)
     # Windows 平台
@@ -74,7 +74,21 @@ elseif(UNIX AND NOT APPLE)
     find_package(Freetype REQUIRED)
     find_package(PNG REQUIRED)
     find_package(ZLIB REQUIRED)
-    set(PLATFORM_LIBS SDL2::SDL2 Threads::Threads Freetype::Freetype PNG::PNG ZLIB::ZLIB m)
+    find_package(OpenSSL REQUIRED) 
+    find_package(PkgConfig REQUIRED)
+    find_path(MOSQUITTO_INCLUDE_DIR mosquitto.h PATHS /usr/include /usr/local/include)
+    find_library(MOSQUITTO_LIB mosquitto PATHS /usr/lib /usr/local/lib)
+    set(PC_INCLUDE_DIRS ${MOSQUITTO_INCLUDE_DIR})
+    set(PLATFORM_LIBS ${PLATFORM_LIBS} ${MOSQUITTO_LIB})
+
+    pkg_check_modules(CJSON REQUIRED libcjson)     
+    set(PC_INCLUDE_DIRS
+        ${MOSQUITTO_INCLUDE_DIR}
+        ${CJSON_INCLUDE_DIRS}
+    )
+    set(PLATFORM_LIBS SDL2::SDL2 Threads::Threads Freetype::Freetype PNG::PNG ZLIB::ZLIB m 
+        OpenSSL::SSL OpenSSL::Crypto ${MOSQUITTO_LIB} ${CJSON_LIBRARIES}
+    )
 else()
     message(FATAL_ERROR "不支持的平台或操作系统！")
 endif()
@@ -134,6 +148,10 @@ list(FILTER ALL_SOURCES EXCLUDE REGEX ".*/obj/.*/[^/]*-[^/]*\\.c$")
 
 
 add_executable(${PROJECT_NAME} main.c  ${ALL_SOURCES})
+
+if(TARGET_PLATFORM STREQUAL "pc")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PC_INCLUDE_DIRS})
+endif()
 
 # --- 链接平台库 ---
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PLATFORM_LIBS})
