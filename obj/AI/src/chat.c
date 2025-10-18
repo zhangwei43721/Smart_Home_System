@@ -50,10 +50,20 @@ char* openai_chat_with_history(ChatNode* history_head, const char* model) {
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
+  // 线程环境与弱网健壮性
+  curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);            // 禁止使用信号，避免多线程环境下崩溃
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);     // 连接超时
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);            // 整体超时
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 10L);     // 低速超时
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);     // 低速阈值
+  char errbuf[CURL_ERROR_SIZE] = {0};
+  curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+
   CURLcode res = curl_easy_perform(curl);
-  if (res != CURLE_OK)
-    fprintf(stderr, "curl_easy_perform() failed: %s\n",
-            curl_easy_strerror(res));
+  if (res != CURLE_OK) {
+    if (errbuf[0]) fprintf(stderr, "curl_easy_perform() failed: %s\n", errbuf);
+    else fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+  }
   curl_easy_cleanup(curl);
   curl_slist_free_all(headers);
   free(json);

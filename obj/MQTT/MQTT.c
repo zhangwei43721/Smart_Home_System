@@ -140,7 +140,7 @@ int mqtt_client_start(void) {
     goto error_cleanup;
   }
 
-  // --- 新增：设置用户名和密码 ---
+  // 设置用户名和密码 ---
   if (MQTT_USERNAME && MQTT_USERNAME[0] != '\0') {
     rc = mosquitto_username_pw_set(g_mosq, MQTT_USERNAME, MQTT_PASSWORD);
     if (rc != MOSQ_ERR_SUCCESS) {
@@ -153,7 +153,7 @@ int mqtt_client_start(void) {
   // --- 设置所有回调函数 ---
   mosquitto_connect_callback_set(g_mosq, on_connect);
   mosquitto_publish_callback_set(g_mosq, on_publish);
-  mosquitto_message_callback_set(g_mosq, on_message);  // <-- 新增：设置消息回调
+  mosquitto_message_callback_set(g_mosq, on_message);  // 设置消息回调
 
   // 连接服务器
   rc = mosquitto_connect(g_mosq, MQTT_BROKER_HOST, MQTT_BROKER_PORT,

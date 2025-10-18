@@ -103,6 +103,8 @@ void screen_entertainment_images(void) {
   lv_obj_set_size(card, 800 - 24, 480 - 48 - 24);
   lv_obj_align(card, LV_ALIGN_TOP_MID, 0, 48 + 12);
   lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
+                        LV_FLEX_ALIGN_START);
   lv_obj_set_style_pad_all(card, 12, 0);
   lv_obj_set_style_pad_column(card, 12, 0);
   lv_obj_set_style_pad_row(card, 12, 0);
@@ -304,9 +306,9 @@ void screen_entertainment_music(void) {
   lv_obj_set_flex_grow(right, 1);
   lv_obj_set_style_pad_all(right, 12, 0);
   lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_flex_align(right, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
-                        LV_FLEX_ALIGN_CENTER);  // 内容居中
-  lv_obj_set_style_pad_row(right, 20, 0);
+  lv_obj_set_flex_align(right, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_START);
+  lv_obj_set_style_pad_row(right, 5, 0);
 
   // 歌曲信息
   g_music_title_label = lv_label_create(right);
@@ -417,7 +419,8 @@ static void play_video_at_index(int index) {
   // 启动mplayer
   char cmd[1024];
   snprintf(cmd, sizeof(cmd),
-           "mplayer -slave -quiet -noborder -input file=%s -geometry 241:145 -zoom -x 453 -y 240 ./media/%s &",
+           "mplayer -slave -quiet -noborder -input file=%s -geometry 240:143 "
+           "-zoom -x 453 -y 240 ./media/%s &",
            fifo_path, g_video_files[index]);
   system(cmd);
 
@@ -484,11 +487,13 @@ void screen_entertainment_video(void) {
   lv_obj_align(card, LV_ALIGN_TOP_MID, 0, 48 + 12);
   lv_obj_set_style_pad_all(card, 12, 0);
   lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);
+  lv_obj_set_style_pad_column(card, 12, 0);  // 为左右面板添加间距
 
   // 左侧：视频列表
   lv_obj_t* left = lv_obj_create(card);
   lv_obj_remove_style_all(left);
-  lv_obj_set_size(left, 260, LV_PCT(100));
+  lv_obj_set_width(left, 183);
+  lv_obj_set_height(left, LV_PCT(100));  // 左侧高度占满
   lv_obj_set_style_bg_color(left, lv_color_white(), 0);
   lv_obj_set_style_bg_opa(left, LV_OPA_COVER, 0);
   lv_obj_set_style_border_width(left, 1, 0);
@@ -502,11 +507,11 @@ void screen_entertainment_video(void) {
   // 右侧：视频播放区域和控制
   lv_obj_t* right = lv_obj_create(card);
   lv_obj_remove_style_all(right);
-  lv_obj_set_height(right, LV_PCT(100));
-  lv_obj_set_flex_grow(right, 1);
-  lv_obj_set_style_pad_all(right, 12, 0);
-  lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_style_pad_row(right, 12, 0);
+  lv_obj_set_flex_grow(right, 1);         // 让 right 自动填充 card 的剩余宽度
+  lv_obj_set_height(right, LV_PCT(100));  // 让 right 和 card 一样高
+  lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);  // 内部元素垂直排列
+  lv_obj_set_style_pad_all(right, 0, 0);             // 移除内边距，方便精确控制
+  lv_obj_set_style_pad_row(right, 15, 0);            // 设置元素间的垂直间距
 
   // 视频标题
   g_video_title_label = lv_label_create(right);
@@ -514,35 +519,36 @@ void screen_entertainment_video(void) {
   lv_label_set_text(g_video_title_label, "请选择视频");
   lv_obj_set_width(g_video_title_label, LV_PCT(100));
   lv_label_set_long_mode(g_video_title_label, LV_LABEL_LONG_DOT);
+  lv_obj_set_style_text_align(g_video_title_label, LV_TEXT_ALIGN_CENTER,
+                              0);  // 标题居中
 
   // 视频显示占位 (mplayer窗口会覆盖在这里)
   lv_obj_t* video_area = lv_obj_create(right);
   lv_obj_set_size(video_area, LV_PCT(100), 240);
   lv_obj_set_style_bg_color(video_area, lv_color_black(), 0);
   lv_obj_set_style_bg_opa(video_area, LV_OPA_COVER, 0);
+  lv_obj_set_style_radius(video_area, 8, 0);  // 添加圆角更美观
+  lv_obj_clear_flag(video_area, LV_OBJ_FLAG_SCROLLABLE);
 
-  // 进度条 + 控制
-  lv_obj_t* slider = lv_slider_create(right);
-  lv_obj_set_width(slider, LV_PCT(100));
+  // 控制按钮容器
+  lv_obj_t* controls_container = lv_obj_create(right);
+  lv_obj_remove_style_all(controls_container);
+  lv_obj_set_width(controls_container, LV_PCT(100));
+  lv_obj_set_height(controls_container, LV_SIZE_CONTENT);  // 高度由内容决定
+  lv_obj_set_flex_flow(controls_container, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(controls_container, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_column(controls_container, 20, 0);
 
-  lv_obj_t* row = lv_obj_create(right);
-  lv_obj_remove_style_all(row);
-  lv_obj_set_width(row, LV_PCT(100));
-  lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-  lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
-                        LV_FLEX_ALIGN_CENTER);
-  lv_obj_set_style_pad_column(row, 20, 0);
-
-  lv_obj_t* btn_play = lv_btn_create(row);
+  lv_obj_t* btn_play = lv_btn_create(controls_container);
   g_video_play_btn_label = lv_label_create(btn_play);
   lv_label_set_text(g_video_play_btn_label, LV_SYMBOL_PLAY);
   lv_obj_add_event_cb(btn_play, on_video_play_pause, LV_EVENT_CLICKED, NULL);
 
-  lv_obj_t* btn_stop = lv_btn_create(row);
+  lv_obj_t* btn_stop = lv_btn_create(controls_container);
   lv_label_set_text(lv_label_create(btn_stop), LV_SYMBOL_STOP);
   lv_obj_add_event_cb(btn_stop, on_video_stop, LV_EVENT_CLICKED, NULL);
 
-  // 扫描视频文件
   DIR* d = opendir("./media");
   if (d) {
     struct dirent* de;
@@ -555,8 +561,6 @@ void screen_entertainment_video(void) {
       }
     }
     closedir(d);
-
-    // 创建列表项
     for (int i = 0; i < g_video_count; i++) {
       lv_obj_t* list_btn = lv_btn_create(left);
       lv_obj_set_size(list_btn, LV_PCT(100), 32);
@@ -566,7 +570,6 @@ void screen_entertainment_video(void) {
                        LV_PART_MAIN | LV_STATE_PRESSED);
       lv_obj_add_event_cb(list_btn, on_video_item_clicked, LV_EVENT_CLICKED,
                           (void*)(intptr_t)i);
-
       lv_obj_t* lbl = lv_label_create(list_btn);
       lv_obj_add_style(lbl, sh_style_text_zh_small(), 0);
       lv_label_set_text(lbl, g_video_files[i]);
@@ -578,7 +581,8 @@ void screen_entertainment_video(void) {
     lv_label_set_text(lbl, "无法打开 ./media 目录");
   }
 
-  // 返回按钮
+  lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
+
   lv_obj_t* btn_back = lv_btn_create(scr);
   lv_obj_set_size(btn_back, 50, 50);
   lv_obj_set_style_radius(btn_back, LV_RADIUS_CIRCLE, 0);
@@ -620,7 +624,7 @@ void screen_entertainment_build(void) {
   // 三张卡片：图片/音乐/视频
   lv_obj_t* grid = lv_obj_create(cont);
   lv_obj_remove_style_all(grid);
-  lv_obj_set_size(grid, 800 - 24, 480 - 48 - 24);
+  lv_obj_set_size(grid, 800 - 24, 480 - 120);
   lv_obj_set_flex_flow(grid, LV_FLEX_FLOW_ROW);
   lv_obj_set_style_pad_column(grid, 12, 0);
   lv_obj_set_style_pad_row(grid, 12, 0);
