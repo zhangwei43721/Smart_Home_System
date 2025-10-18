@@ -23,4 +23,16 @@ void mqtt_client_stop(void);
  */
 int mqtt_publish(const char *topic, const char *payload, int qos, int retain);
 
+/**
+ * @brief 发送灯光查询指令（与文件 list 同步的参数格式）。
+ * @return 0 表示成功发布请求，非 0 表示失败。
+ */
+int mqtt_query_light_list(void);
+
+/**
+ * @brief 发送报警查询指令（与文件 list 同步的参数格式）。
+ * @return 0 表示成功发布请求，非 0 表示失败。
+ */
+int mqtt_query_alarm_list(void);
+
 #endif // MQTT_H

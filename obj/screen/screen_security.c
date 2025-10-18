@@ -20,6 +20,7 @@ static int g_alarm_updating = 0; // 防止程序设置状态时触发递归
 
 // 前置声明，避免隐式声明导致的静态冲突
 static void sec_update_alarm_now(int on);
+static void on_any_deleted(lv_event_t *e);
 
 static void sec_update_buttons(void) {
   if (!g_btn_disarm || !g_btn_arm_away || !g_btn_arm_home) return;
@@ -69,6 +70,16 @@ static void sec_update_alarm_now(int on) {
     lv_obj_clear_state(g_btn_alarm_now, LV_STATE_CHECKED);
     if (g_lbl_alarm_now) lv_obj_set_style_text_color(g_lbl_alarm_now, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
   }
+}
+
+// 当组件被 LVGL 销毁时，清空对应的静态指针，避免悬空指针导致段错误
+static void on_any_deleted(lv_event_t *e) {
+  lv_obj_t *obj = lv_event_get_target(e);
+  if (obj == g_btn_disarm) g_btn_disarm = NULL;
+  else if (obj == g_btn_arm_away) g_btn_arm_away = NULL;
+  else if (obj == g_btn_arm_home) g_btn_arm_home = NULL;
+  else if (obj == g_btn_alarm_now) { g_btn_alarm_now = NULL; }
+  else if (obj == g_lbl_alarm_now) { g_lbl_alarm_now = NULL; }
 }
 
 // ========== 详情弹窗 ==========
@@ -176,21 +187,27 @@ void screen_security_build(void) {
   lv_obj_add_style(g_btn_disarm, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(g_btn_disarm, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_add_event_cb(g_btn_disarm, on_disarm, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(g_btn_disarm, on_any_deleted, LV_EVENT_DELETE, NULL);
   lv_obj_t * lbl0 = lv_label_create(g_btn_disarm); lv_label_set_text(lbl0, "撤防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl0, sh_get_font_zh(), 0); lv_obj_center(lbl0);
+  lv_obj_add_event_cb(lbl0, on_any_deleted, LV_EVENT_DELETE, NULL);
 
   g_btn_arm_away = lv_btn_create(row_ctrl);
   lv_obj_set_size(g_btn_arm_away, 120, 40);
   lv_obj_add_style(g_btn_arm_away, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(g_btn_arm_away, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_add_event_cb(g_btn_arm_away, on_arm_away, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(g_btn_arm_away, on_any_deleted, LV_EVENT_DELETE, NULL);
   lv_obj_t * lbl1 = lv_label_create(g_btn_arm_away); lv_label_set_text(lbl1, "一键布防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl1, sh_get_font_zh(), 0); lv_obj_center(lbl1);
+  lv_obj_add_event_cb(lbl1, on_any_deleted, LV_EVENT_DELETE, NULL);
 
   g_btn_arm_home = lv_btn_create(row_ctrl);
   lv_obj_set_size(g_btn_arm_home, 120, 40);
   lv_obj_add_style(g_btn_arm_home, sh_style_btn_neutral(), LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_add_style(g_btn_arm_home, sh_style_btn_neutral_pressed(), LV_PART_MAIN | LV_STATE_PRESSED);
   lv_obj_add_event_cb(g_btn_arm_home, on_arm_home, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(g_btn_arm_home, on_any_deleted, LV_EVENT_DELETE, NULL);
   lv_obj_t * lbl2 = lv_label_create(g_btn_arm_home); lv_label_set_text(lbl2, "在家布防"); if (sh_get_font_zh()) lv_obj_set_style_text_font(lbl2, sh_get_font_zh(), 0); lv_obj_center(lbl2);
+  lv_obj_add_event_cb(lbl2, on_any_deleted, LV_EVENT_DELETE, NULL);
 
   // 新增：立即报警按钮（位于在家布防右侧）
   g_btn_alarm_now = lv_btn_create(row_ctrl);
@@ -200,7 +217,9 @@ void screen_security_build(void) {
   // 允许被置为 CHECKED，以便保持激活态样式
   lv_obj_add_flag(g_btn_alarm_now, LV_OBJ_FLAG_CHECKABLE);
   lv_obj_add_event_cb(g_btn_alarm_now, on_alarm_now_changed, LV_EVENT_VALUE_CHANGED, NULL);
+  lv_obj_add_event_cb(g_btn_alarm_now, on_any_deleted, LV_EVENT_DELETE, NULL);
   g_lbl_alarm_now = lv_label_create(g_btn_alarm_now); lv_label_set_text(g_lbl_alarm_now, "立即报警"); if (sh_get_font_zh()) lv_obj_set_style_text_font(g_lbl_alarm_now, sh_get_font_zh(), 0); lv_obj_center(g_lbl_alarm_now);
+  lv_obj_add_event_cb(g_lbl_alarm_now, on_any_deleted, LV_EVENT_DELETE, NULL);
   // 根据持久化状态恢复按钮与蜂鸣器
   security_set_alarm_active(alarm_on_initial ? 1 : 0);
 

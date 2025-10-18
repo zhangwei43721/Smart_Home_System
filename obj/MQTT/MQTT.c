@@ -10,6 +10,8 @@
 #include "../Include/config.h"
 #include "../Include/screen_lighting.h"
 #include "../Include/screen_security.h"
+#include "../Include/Hardware.h"
+#include "../data/state_store.h"
 #include "libs/cJSON/cJSON.h"
 
 // --- 静态全局变量 ---
@@ -67,9 +69,6 @@ static void on_connect(struct mosquitto* mosq, void* obj, int reason_code) {
 /**
  * @brief 当有新消息到达已订阅的主题时被调用。
  */
-/**
- * @brief 当有新消息到达已订阅的主题时被调用。
- */
 static void on_message(struct mosquitto* mosq, void* obj,
                        const struct mosquitto_message* msg) {
   // 1. 基本检查
@@ -84,6 +83,36 @@ static void on_message(struct mosquitto* mosq, void* obj,
     // --- 灯光控制逻辑 ---
     cJSON* json = cJSON_Parse((const char*)msg->payload);
     if (json) {
+      const cJSON* cmd = cJSON_GetObjectItemCaseSensitive(json, "command");
+      if (cJSON_IsString(cmd) && cmd->valuestring && strcmp(cmd->valuestring, "list") == 0) {
+        LightPersist lp[LED_COUNT];
+        memset(lp, 0, sizeof(lp));
+        ss_lighting_load(lp, LED_COUNT);
+        cJSON *root = cJSON_CreateObject();
+        if (root) {
+          cJSON_AddStringToObject(root, "command", "list_response");
+          cJSON_AddStringToObject(root, "status", "ok");
+          cJSON *arr = cJSON_CreateArray();
+          if (arr) {
+            for (int i = 0; i < LED_COUNT; ++i) {
+              cJSON *item = cJSON_CreateObject();
+              if (item) {
+                cJSON_AddNumberToObject(item, "id", i + 1);
+                cJSON_AddStringToObject(item, "state", lp[i].is_on ? "ON" : "OFF");
+                cJSON_AddNumberToObject(item, "brightness", lp[i].brightness);
+                cJSON_AddNumberToObject(item, "color_temp", lp[i].color_temp);
+                cJSON_AddItemToArray(arr, item);
+              }
+            }
+            cJSON_AddItemToObject(root, "lights", arr);
+          }
+          char *payload = cJSON_PrintUnformatted(root);
+          if (payload) { mqtt_publish(MQTT_SUB_LIGHT_TOPIC, payload, MQTT_QOS, 0); free(payload); }
+          cJSON_Delete(root);
+        }
+        cJSON_Delete(json);
+        return;
+      }
       const cJSON* led_obj = cJSON_GetObjectItemCaseSensitive(json, "led");
       const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
       if (cJSON_IsNumber(led_obj) && cJSON_IsString(state_obj)) {
@@ -96,6 +125,23 @@ static void on_message(struct mosquitto* mosq, void* obj,
     // --- 报警器控制逻辑 ---
     cJSON* json = cJSON_Parse((const char*)msg->payload);
     if (json) {
+      const cJSON* cmd = cJSON_GetObjectItemCaseSensitive(json, "command");
+      if (cJSON_IsString(cmd) && cmd->valuestring && strcmp(cmd->valuestring, "list") == 0) {
+        int alarm_on = ss_alarm_load();
+        int sec_state = ss_security_load();
+        cJSON *root = cJSON_CreateObject();
+        if (root) {
+          cJSON_AddStringToObject(root, "command", "list_response");
+          cJSON_AddStringToObject(root, "status", "ok");
+          cJSON_AddStringToObject(root, "state", alarm_on ? "ON" : "OFF");
+          cJSON_AddNumberToObject(root, "mode", sec_state);
+          char *payload = cJSON_PrintUnformatted(root);
+          if (payload) { mqtt_publish(MQTT_SUB_ALARM_TOPIC, payload, MQTT_QOS, 0); free(payload); }
+          cJSON_Delete(root);
+        }
+        cJSON_Delete(json);
+        return;
+      }
       const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
       if (cJSON_IsString(state_obj)) {
         security_set_alarm_active(strcmp(state_obj->valuestring, "ON") == 0);
