@@ -6,10 +6,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../Include/MQTT_File.h"
 #include "../Include/config.h"
-#include "libs/cJSON/cJSON.h"
 #include "../Include/screen_lighting.h"
 #include "../Include/screen_security.h"
+#include "libs/cJSON/cJSON.h"
 
 // --- 静态全局变量 ---
 static struct mosquitto* g_mosq = NULL;
@@ -46,6 +47,13 @@ static void on_connect(struct mosquitto* mosq, void* obj, int reason_code) {
       printf("MQTT: 已订阅主题 [%s]\n", MQTT_SUB_ALARM_TOPIC);
     }
 
+    if (mosquitto_subscribe(mosq, NULL, MQTT_SUB_FILE_TOPIC, MQTT_SUB_QOS) !=
+        MOSQ_ERR_SUCCESS) {
+      fprintf(stderr, "MQTT 错误: 订阅文件主题失败。\n");
+    } else {
+      printf("MQTT: 已订阅主题 [%s]\n", MQTT_SUB_FILE_TOPIC);
+    }
+
     // 3. 发布一条启动成功消息
     mqtt_publish(MQTT_STARTUP_TOPIC, MQTT_STARTUP_MSG, MQTT_QOS, MQTT_RETAIN);
 
@@ -59,59 +67,44 @@ static void on_connect(struct mosquitto* mosq, void* obj, int reason_code) {
 /**
  * @brief 当有新消息到达已订阅的主题时被调用。
  */
+/**
+ * @brief 当有新消息到达已订阅的主题时被调用。
+ */
 static void on_message(struct mosquitto* mosq, void* obj,
                        const struct mosquitto_message* msg) {
+  // 1. 基本检查
   if (msg == NULL || msg->payload == NULL) return;
 
+  // 2. 打印标准日志，方便追踪
   printf("MQTT: 收到消息 -> 主题: %s | 内容: %s\n", msg->topic,
          (char*)msg->payload);
 
-  // --- 根据不同主题执行不同动作 ---
+  // 3. 根据主题分发任务
   if (strcmp(msg->topic, MQTT_SUB_LIGHT_TOPIC) == 0) {
     // --- 灯光控制逻辑 ---
     cJSON* json = cJSON_Parse((const char*)msg->payload);
-    if (json == NULL) {
-      fprintf(stderr, "MQTT 错误: 解析灯光控制JSON失败。\n");
-      return;
+    if (json) {
+      const cJSON* led_obj = cJSON_GetObjectItemCaseSensitive(json, "led");
+      const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
+      if (cJSON_IsNumber(led_obj) && cJSON_IsString(state_obj)) {
+        lighting_set_from_mqtt(led_obj->valueint,
+                               strcmp(state_obj->valuestring, "ON") == 0);
+      }
+      cJSON_Delete(json);
     }
-
-    const cJSON* led_obj = cJSON_GetObjectItemCaseSensitive(json, "led");
-    const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
-
-    if (cJSON_IsNumber(led_obj) && cJSON_IsString(state_obj)) {
-      int led_num = led_obj->valueint;
-      char* state = state_obj->valuestring;
-      int on = (strcmp(state, "ON") == 0);
-
-      printf("  -> 动作: 控制 LED%d -> %s\n", led_num, state);
-      // 使用照明页面的入口以保持 UI/持久化/硬件 同步
-      lighting_set_from_mqtt(led_num, on);
-    } else {
-      fprintf(stderr, "MQTT 错误: 灯光控制JSON格式不正确。\n");
-    }
-    cJSON_Delete(json);
-
   } else if (strcmp(msg->topic, MQTT_SUB_ALARM_TOPIC) == 0) {
     // --- 报警器控制逻辑 ---
     cJSON* json = cJSON_Parse((const char*)msg->payload);
-    if (json == NULL) {
-      fprintf(stderr, "MQTT 错误: 解析报警器控制JSON失败。\n");
-      return;
+    if (json) {
+      const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
+      if (cJSON_IsString(state_obj)) {
+        security_set_alarm_active(strcmp(state_obj->valuestring, "ON") == 0);
+      }
+      cJSON_Delete(json);
     }
-
-    const cJSON* state_obj = cJSON_GetObjectItemCaseSensitive(json, "state");
-
-    if (cJSON_IsString(state_obj)) {
-      char* state = state_obj->valuestring;
-      int on = (strcmp(state, "ON") == 0);
-
-      printf("  -> 动作: 控制蜂鸣器 -> %s\n", state);
-      // 调用安防入口以同步 UI 高亮与硬件
-      security_set_alarm_active(on);
-    } else {
-      fprintf(stderr, "MQTT 错误: 报警器控制JSON格式不正确。\n");
-    }
-    cJSON_Delete(json);
+  } else if (strcmp(msg->topic, MQTT_SUB_FILE_TOPIC) == 0) {
+    // --- 文件操作逻辑 ---
+    mqtt_file_handle_message((const char*)msg->payload);
   }
 }
 
@@ -133,6 +126,7 @@ int mqtt_client_start(void) {
   if (g_started) return 0;
 
   mosquitto_lib_init();
+  mqtt_file_init();
 
   g_mosq = mosquitto_new(NULL, true, NULL);
   if (g_mosq == NULL) {
