@@ -7,7 +7,10 @@
 项目由两部分组成：
 
 1.  **嵌入式主控终端 (Embedded Terminal)**：运行于嵌入式 Linux 设备，负责设备控制、UI 渲染和核心业务逻辑。
-2.  **Web 控制端 (Web Control Panel)**：一个基于 Vue 和 TypeScript 的现代化 Web 应用，让您能随时随地远程控制您的家。
+
+2.  **Web 控制端 (Web Control Panel)**：一个基于 Vue 和 TypeScript 的现代化 Web 应用，让您能随时随地远程控制您的家
+
+    Web端使用[MQTT官方开源代码](https://github.com/emqx/MQTT-Client-Examples)修改而来
 
 ---
 
