@@ -1,0 +1,593 @@
+* {
+  box-sizing: border-box;
+}
+
+.mqtt-demo {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  background: #f5f5f5;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ==================== 状态栏 ==================== */
+.status-bar {
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.status-bar.connected {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9e9e9e;
+  transition: all 0.3s ease;
+}
+
+.status-dot.active {
+  background: #4caf50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.connection-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.connection-text {
+  display: none;
+}
+
+/* ==================== 卡片通用样式 ==================== */
+.el-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #212121;
+}
+
+.card-header.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.header-icon {
+  font-size: 22px;
+  color: #1976d2;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.collapse-icon {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  color: #757575;
+}
+
+.collapse-icon.collapsed {
+  transform: rotate(-180deg);
+}
+
+/* ==================== 按钮优化 ==================== */
+.button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.el-button {
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-text {
+  display: inline;
+}
+
+/* ==================== 灯光控制（移动端优化） ==================== */
+.lights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.light-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+  min-height: 140px;
+}
+
+.light-card.active {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  border-color: #1976d2;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.light-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.light-icon {
+  font-size: 40px;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+}
+
+.light-card.active .light-icon {
+  filter: grayscale(0%);
+  transform: scale(1.1);
+}
+
+.light-info {
+  text-align: center;
+  flex: 1;
+}
+
+.light-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.light-status {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* ==================== 警报控制 ==================== */
+.alarm-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.alarm-control.active {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  border-color: #f44336;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.alarm-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alarm-icon {
+  font-size: 48px;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.alarm-icon.active {
+  filter: grayscale(0%);
+  animation: ring 1s ease-in-out infinite;
+}
+
+@keyframes ring {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  10%,
+  30% {
+    transform: rotate(-15deg);
+  }
+
+  20%,
+  40% {
+    transform: rotate(15deg);
+  }
+}
+
+.alarm-info {
+  flex: 1;
+}
+
+.alarm-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.alarm-status {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* ==================== 文件管理 ==================== */
+.file-upload-section {
+  margin-bottom: 20px;
+}
+
+.drop-zone {
+  border: 2px dashed #d0d0d0;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone:active {
+  transform: scale(0.98);
+}
+
+.drop-zone.drag-over {
+  border-color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+.drop-zone.has-file {
+  border-color: #4caf50;
+  background-color: #e8f5e9;
+  padding: 20px;
+}
+
+.drop-zone.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.drop-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-icon {
+  font-size: 40px;
+  color: #999;
+}
+
+.hint-title {
+  margin: 0;
+  color: #666;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.hint-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+}
+
+.file-preview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.file-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon {
+  font-size: 36px;
+  color: #1976d2;
+  flex-shrink: 0;
+}
+
+.file-info {
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #212121;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.file-actions .el-button {
+  flex: 1;
+}
+
+/* 文件列表 */
+.file-list-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212121;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-count {
+  font-size: 12px;
+  color: #757575;
+  font-weight: 400;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.file-item:active {
+  background: #e9ecef;
+}
+
+.file-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-item-icon {
+  font-size: 20px;
+  color: #1976d2;
+  flex-shrink: 0;
+}
+
+.file-item-name {
+  font-size: 14px;
+  color: #212121;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ==================== 消息日志 ==================== */
+.message-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.message-textarea :deep(.el-textarea__inner) {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ==================== 表单优化 ==================== */
+.el-form-item {
+  margin-bottom: 16px;
+}
+
+.el-select {
+  width: 100%;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (min-width: 768px) {
+  .mqtt-demo {
+    padding: 24px;
+  }
+
+  .status-bar {
+    padding: 16px 24px;
+  }
+
+  .connection-text {
+    display: inline;
+  }
+
+  .el-card {
+    margin-bottom: 24px;
+  }
+
+  .card-header {
+    font-size: 18px;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .lights-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .light-card {
+    padding: 20px;
+  }
+
+  .btn-text {
+    display: inline;
+  }
+
+  .header-actions .el-button {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group .el-button {
+    width: 100%;
+  }
+
+  .header-actions {
+    gap: 2px;
+  }
+
+  .header-actions .el-button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .alarm-control {
+    padding: 16px;
+  }
+
+  .alarm-icon {
+    font-size: 40px;
+  }
+
+  .alarm-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mqtt-demo {
+    padding: 12px;
+  }
+
+  .status-bar {
+    padding: 10px 12px;
+  }
+
+  .status-indicator {
+    font-size: 14px;
+  }
+
+  .connection-info {
+    font-size: 12px;
+  }
+
+  .card-header {
+    font-size: 15px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .header-icon {
+    font-size: 20px;
+  }
+}
