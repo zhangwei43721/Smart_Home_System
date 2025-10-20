@@ -25,6 +25,7 @@ static lv_obj_t* g_kb = NULL;
 // 导航返回到首页（恢复底栏）
 extern void demo_dashboard(void);
 
+// 添加用户消息气泡
 static void append_user_bubble(const char* text) {
   if (!g_msg_cont || !text) return;
   lv_obj_t* row = lv_obj_create(g_msg_cont);
@@ -39,6 +40,7 @@ static void append_user_bubble(const char* text) {
   lv_obj_add_style(bubble, sh_style_card(), 0);
   lv_obj_set_style_bg_color(bubble, lv_palette_lighten(LV_PALETTE_BLUE, 4), 0);
   lv_obj_set_width(bubble, LV_SIZE_CONTENT);
+  lv_obj_set_height(bubble, LV_SIZE_CONTENT);
   lv_obj_set_style_max_width(bubble, 100, 10);
   lv_obj_set_style_pad_all(bubble, 10, 0);
   lv_obj_set_flex_grow(bubble, 0);
