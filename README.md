@@ -109,7 +109,7 @@
 
 1.  **克隆项目**
     ```bash
-    git clone https://your-repo-url/Smart_Home_System.git
+    git clone https://github.com/zhangwei43721/Smart_Home_System.git
     cd Smart_Home_System
     ```
 
